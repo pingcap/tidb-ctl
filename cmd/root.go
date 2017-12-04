@@ -14,24 +14,38 @@
 package cmd
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net"
+	"net/http"
 	"os"
+	"strconv"
+	"strings"
 
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
-var cfgFile string
+const (
+	urlHeader           = "http://"
+	hostFlagName        = "host"
+	portFlagName        = "port"
+	defaultHost         = "127.0.0.1"
+	defaultPort  uint16 = 10080
+)
+
+var (
+	host    net.IP
+	port    uint16
+	baseURL string
+)
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "tidb-ctl",
 	Short: "TiDB Controller",
 	Long:  `TiDB Controller (tidb-ctl) is a command line tool for TiDB Server (tidb-server).`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	//	Run: func(cmd *cobra.Command, args []string) { },
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -43,41 +57,33 @@ func Execute() {
 	}
 }
 
-func init() {
-	cobra.OnInitialize(initConfig)
-
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.tidb-ctl.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+func replaceTableFlag(table string) string {
+	return strings.Replace(table, ".", "/", 1)
 }
 
-// initConfig reads in config file and ENV variables if set.
-func initConfig() {
-	if cfgFile != "" {
-		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
-	} else {
-		// Find home directory.
-		home, err := homedir.Dir()
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-
-		// Search config in home directory with name ".tidb-ctl" (without extension).
-		viper.AddConfigPath(home)
-		viper.SetConfigName(".tidb-ctl")
+func httpPrint(path string) {
+	baseURL = urlHeader + host.String() + ":" + strconv.Itoa(int(port)) + "/"
+	resp, err := http.Get(baseURL + path)
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
-
-	viper.AutomaticEnv() // read in environment variables that match
-
-	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println(err)
 	}
+	var prettyJSON bytes.Buffer
+	err = json.Indent(&prettyJSON, body, "", "    ")
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(string(prettyJSON.Bytes()))
+}
+
+func init() {
+	rootCmd.PersistentFlags().IPVar(&host, hostFlagName, net.IP(defaultHost), "TiDB server host")
+	rootCmd.PersistentFlags().Uint16Var(&port, portFlagName, defaultPort, "TiDB server port")
+	rootCmd.MarkPersistentFlagRequired(hostFlagName)
+	rootCmd.MarkPersistentFlagRequired(portFlagName)
 }

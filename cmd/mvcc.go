@@ -14,36 +14,81 @@
 package cmd
 
 import (
-	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
+)
+
+const (
+	txnPrefix   = "mvcc/txn/"
+	keyPrefix   = "mvcc/key/"
+	indexPrefix = "mvcc/index/"
+)
+
+var (
+	mvccTable       string
+	mvccHID         int64
+	mvccStartTS     uint64
+	mvccIndexName   string
+	mvccIndexValues []string
 )
 
 // mvccCmd represents the mvcc command
 var mvccCmd = &cobra.Command{
 	Use:   "mvcc",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "MVCC Information Query",
+	Long: `Query for MVCC information, e.g.
+	* tidb-ctl mvcc -t mydb.mytable --hid 123
+	MVCC info of a specified handle in mydb.mytable
+	* tidb-ctl mvcc -t mydb.mytable --start-ts 123
+	MVCC info of the first key in mydb.mytable with a specified start ts
+	* tidb-ctl mvcc --start-ts 123
+	MVCC info of the primary keys with a specified start ts
+	* tidb-ctl mvcc -t mydb.mytable --index-name idx --index-values column_name_1: column_value_1, column_name_2: column_value2...
+	MVCC info of a specified index record
+	`,
+	Run: mvccQuery,
+}
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("mvcc called")
-	},
+func mvccQuery(_ *cobra.Command, _ []string) {
+	if mvccStartTS != 0 {
+		path := txnPrefix + strconv.FormatUint(mvccStartTS, 10)
+		if len(mvccTable) != 0 {
+			httpPrint(path + "/" + replaceTableFlag(mvccTable))
+			return
+		}
+		httpPrint(path)
+		return
+	}
+
+	if mvccHID != 0 {
+		path := keyPrefix + replaceTableFlag(mvccTable) + "/" + strconv.FormatInt(mvccHID, 10)
+		httpPrint(path)
+		return
+	}
+
+	if len(mvccIndexName) != 0 {
+		path := indexPrefix + replaceTableFlag(mvccTable) + "/" + mvccIndexName + "?" + parseValueString(mvccIndexValues)
+		httpPrint(path)
+		return
+	}
+}
+
+func parseValueString(values []string) string {
+	var str string
+	for _, v := range values {
+		str += strings.Replace(v, ":", "=", 1) + "&"
+	}
+	return str[:len(str)-1]
 }
 
 func init() {
 	rootCmd.AddCommand(mvccCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// mvccCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// mvccCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	mvccCmd.Flags().StringVarP(&mvccTable, "table", "t", "", "Combine with --hid or --start-ts to locate a specified table, database name must included, e.g. `mydb.mytable`.")
+	mvccCmd.Flags().Int64Var(&mvccHID, "hid", 0, "Get MVCC info of the key with a specified handle ID, must combine with --table.")
+	mvccCmd.Flags().Uint64Var(&mvccStartTS, "start-ts", 0, "Get MVCC info of the primary key, or get MVCC info of the first key in the table (with --table) with a specified start ts.")
+	mvccCmd.Flags().StringVar(&mvccIndexName, "index-name", "", "Index Name of a specified index key.")
+	mvccCmd.Flags().StringSliceVar(&mvccIndexValues, "index-values", nil, "Get MVCC info of a specified index key, argument example: `column_name_1: column_value_1, column_name_2: column_value2...`")
 }

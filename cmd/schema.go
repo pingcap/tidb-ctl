@@ -14,36 +14,67 @@
 package cmd
 
 import (
-	"fmt"
+	"strconv"
 
 	"github.com/spf13/cobra"
+)
+
+const (
+	schemaPrefix  = "schema/"
+	tableIDPrefix = "schema?table_id="
+)
+
+var (
+	schemaDB    string
+	schemaTable string
+	schemaTID   int64
 )
 
 // schemaCmd represents the schema command
 var schemaCmd = &cobra.Command{
 	Use:   "schema",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Schema Information Query",
+	Long: `Query for Schema information, e.g.
+	* tidb-ctl schema
+	Show all databases schema info.
+	* tidb-ctl schema -d dbname
+	Show all tables schema info of specified database.
+	* tidb-ctl schema -t mydb.mytable
+	Get schema info of a specified table, database name must included.
+	* tidb-ctl schema --tid 123
+	Get schema info of a specified table id.
+	`,
+	Run: schemaQuery,
+}
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("schema called")
-	},
+func schemaQuery(_ *cobra.Command, _ []string) {
+	var path string
+	if len(schemaDB) != 0 {
+		path = schemaPrefix + schemaDB
+		httpPrint(path)
+		return
+	}
+
+	if len(schemaTable) != 0 {
+		path = schemaPrefix + replaceTableFlag(schemaTable)
+		httpPrint(path)
+		return
+	}
+
+	if schemaTID != 0 {
+		path = tableIDPrefix + strconv.FormatInt(schemaTID, 10)
+		httpPrint(path)
+		return
+	}
+
+	path = schemaPrefix[:len(schemaPrefix)-1]
+	httpPrint(path)
 }
 
 func init() {
 	rootCmd.AddCommand(schemaCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// schemaCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// schemaCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	schemaCmd.Flags().StringVarP(&schemaDB, "database", "d", "", "Show all tables schema info of specified database.")
+	schemaCmd.Flags().StringVarP(&schemaTable, "table", "t", "", "Get schema info of a specified table, database name must included, e.g. `mydb.mytable`.")
+	schemaCmd.Flags().Int64Var(&schemaTID, "tid", 0, "Get schema info of a specified table id.")
 }
