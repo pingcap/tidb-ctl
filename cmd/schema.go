@@ -14,67 +14,84 @@
 package cmd
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/spf13/cobra"
 )
 
 const (
-	schemaPrefix  = "schema/"
-	tableIDPrefix = "schema?table_id="
+	schemaRoot       = "schema"
+	schemaRootPrefix = schemaRoot + "/"
+	tableIDPrefix    = schemaRootPrefix + "?table_id="
 )
 
+// schema command flags
 var (
-	schemaDB    string
 	schemaTable string
 	schemaTID   int64
 )
 
-// schemaCmd represents the schema command
-var schemaCmd = &cobra.Command{
+// schemaRootCmd represents the schema command
+var schemaRootCmd = &cobra.Command{
 	Use:   "schema",
-	Short: "Schema Information Query",
-	Long: `Query for Schema information, e.g.
-	* tidb-ctl schema
-	Show all databases schema info.
-	* tidb-ctl schema -d dbname
-	Show all tables schema info of specified database.
-	* tidb-ctl schema -t mydb.mytable
-	Get schema info of a specified table, database name must included.
-	* tidb-ctl schema --tid 123
-	Get schema info of a specified table id.
-	`,
-	Run: schemaQuery,
+	Short: "Schema Information",
+	Long:  "'tidb-ctl schema' to list all databases schema info.",
+	RunE:  listDatabases,
 }
 
-func schemaQuery(_ *cobra.Command, _ []string) {
-	var path string
-	if len(schemaDB) != 0 {
-		path = schemaPrefix + schemaDB
-		httpPrint(path)
-		return
+func listDatabases(_ *cobra.Command, args []string) error {
+	if len(args) != 0 {
+		return fmt.Errorf("too many arguments")
 	}
-
-	if len(schemaTable) != 0 {
-		path = schemaPrefix + replaceTableFlag(schemaTable)
-		httpPrint(path)
-		return
-	}
-
-	if schemaTID != 0 {
-		path = tableIDPrefix + strconv.FormatInt(schemaTID, 10)
-		httpPrint(path)
-		return
-	}
-
-	path = schemaPrefix[:len(schemaPrefix)-1]
-	httpPrint(path)
+	return httpPrint(schemaRoot)
 }
 
 func init() {
-	rootCmd.AddCommand(schemaCmd)
+	idFlagName := "id"
 
-	schemaCmd.Flags().StringVarP(&schemaDB, "database", "d", "", "Show all tables schema info of specified database.")
-	schemaCmd.Flags().StringVarP(&schemaTable, "table", "t", "", "Get schema info of a specified table, database name must included, e.g. `mydb.mytable`.")
-	schemaCmd.Flags().Int64Var(&schemaTID, "tid", 0, "Get schema info of a specified table id.")
+	schemaRootCmd.AddCommand(listTableByNameCmd)
+	schemaRootCmd.AddCommand(listTableByIDCmd)
+
+	listTableByNameCmd.Flags().StringVarP(&schemaTable, "name", "n", "", "get schema info of a specified table.")
+	listTableByIDCmd.Flags().Int64VarP(&schemaTID, idFlagName, "i", 0, "get schema info of a specified table id.")
+
+	listTableByIDCmd.MarkFlagRequired(idFlagName)
+}
+
+// listTableByNameCmd represents the schema command
+var listTableByNameCmd = &cobra.Command{
+	Use:   "in",
+	Short: "Schema Information of Tables In Database",
+	Long: `Get for Schema information, e.g.
+* tidb-ctl schema in [database name]
+Show all tables schema info of specified database.
+* tidb-ctl schema in [database name] --name|-n [table name]
+Get schema info of a specified table in database.
+`,
+	RunE: listTableByName,
+}
+
+func listTableByName(_ *cobra.Command, args []string) error {
+	if len(args) != 1 {
+		return fmt.Errorf("expect one argument as database name")
+	}
+	if len(schemaTable) != 0 {
+		return httpPrint(schemaRootPrefix + args[0] + "/" + schemaTable)
+	}
+	return httpPrint(schemaRootPrefix + args[0])
+}
+
+var listTableByIDCmd = &cobra.Command{
+	Use:   "tid",
+	Short: "Schema Information of Tables By TableID",
+	Long:  "'tidb-ctl schema tid --id|-i [tableID]' to get schema info of a specified table id.",
+	RunE:  listTableByID,
+}
+
+func listTableByID(_ *cobra.Command, args []string) error {
+	if len(args) != 0 {
+		return fmt.Errorf("too many arguments")
+	}
+	return httpPrint(tableIDPrefix + strconv.FormatInt(schemaTID, 10))
 }

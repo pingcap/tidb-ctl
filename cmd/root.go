@@ -22,23 +22,14 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 
 	"github.com/spf13/cobra"
 )
 
-const (
-	urlHeader           = "http://"
-	hostFlagName        = "host"
-	portFlagName        = "port"
-	defaultHost         = "127.0.0.1"
-	defaultPort  uint16 = 10080
-)
-
+// root command flags
 var (
-	host    net.IP
-	port    uint16
-	baseURL string
+	host net.IP
+	port uint16
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -57,33 +48,35 @@ func Execute() {
 	}
 }
 
-func replaceTableFlag(table string) string {
-	return strings.Replace(table, ".", "/", 1)
-}
-
-func httpPrint(path string) {
-	baseURL = urlHeader + host.String() + ":" + strconv.Itoa(int(port)) + "/"
-	resp, err := http.Get(baseURL + path)
+func httpPrint(path string) error {
+	resp, err := http.Get("http://" + host.String() + ":" + strconv.Itoa(int(port)) + "/" + path)
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Println(err)
+		return err
 	}
 	var prettyJSON bytes.Buffer
 	err = json.Indent(&prettyJSON, body, "", "    ")
 	if err != nil {
-		fmt.Println(err)
+		return err
 	}
 	fmt.Println(string(prettyJSON.Bytes()))
+	return nil
 }
 
 func init() {
-	rootCmd.PersistentFlags().IPVar(&host, hostFlagName, net.IP(defaultHost), "TiDB server host")
-	rootCmd.PersistentFlags().Uint16Var(&port, portFlagName, defaultPort, "TiDB server port")
+	hostFlagName := "host"
+	portFlagName := "port"
+
+	rootCmd.AddCommand(mvccCmd)
+	rootCmd.AddCommand(regionCmd)
+	rootCmd.AddCommand(schemaRootCmd)
+
+	rootCmd.PersistentFlags().IPVarP(&host, hostFlagName, "H", net.IP("127.0.0.1"), "TiDB server host")
+	rootCmd.PersistentFlags().Uint16VarP(&port, portFlagName, "P", 10080, "TiDB server port")
 	rootCmd.MarkPersistentFlagRequired(hostFlagName)
 	rootCmd.MarkPersistentFlagRequired(portFlagName)
 }

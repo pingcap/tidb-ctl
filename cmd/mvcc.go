@@ -14,6 +14,7 @@
 package cmd
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -21,74 +22,132 @@ import (
 )
 
 const (
-	txnPrefix   = "mvcc/txn/"
-	keyPrefix   = "mvcc/key/"
-	indexPrefix = "mvcc/index/"
+	txnPrefix = "mvcc/txn/"
+	keyPrefix = "mvcc/key/"
+	hexPrefix = "mvcc/hex/"
+	idxPrefix = "mvcc/index/"
 )
 
+// mvcc command flags
 var (
+	mvccDB          string
 	mvccTable       string
 	mvccHID         int64
 	mvccStartTS     uint64
 	mvccIndexName   string
-	mvccIndexValues []string
+	mvccIndexValues string
 )
 
 // mvccCmd represents the mvcc command
 var mvccCmd = &cobra.Command{
 	Use:   "mvcc",
-	Short: "MVCC Information Query",
-	Long: `Query for MVCC information, e.g.
-	* tidb-ctl mvcc -t mydb.mytable --hid 123
-	MVCC info of a specified handle in mydb.mytable
-	* tidb-ctl mvcc -t mydb.mytable --start-ts 123
-	MVCC info of the first key in mydb.mytable with a specified start ts
-	* tidb-ctl mvcc --start-ts 123
-	MVCC info of the primary keys with a specified start ts
-	* tidb-ctl mvcc -t mydb.mytable --index-name idx --index-values column_name_1: column_value_1, column_name_2: column_value2...
-	MVCC info of a specified index record
-	`,
-	Run: mvccQuery,
-}
-
-func mvccQuery(_ *cobra.Command, _ []string) {
-	if mvccStartTS != 0 {
-		path := txnPrefix + strconv.FormatUint(mvccStartTS, 10)
-		if len(mvccTable) != 0 {
-			httpPrint(path + "/" + replaceTableFlag(mvccTable))
-			return
-		}
-		httpPrint(path)
-		return
-	}
-
-	if mvccHID != 0 {
-		path := keyPrefix + replaceTableFlag(mvccTable) + "/" + strconv.FormatInt(mvccHID, 10)
-		httpPrint(path)
-		return
-	}
-
-	if len(mvccIndexName) != 0 {
-		path := indexPrefix + replaceTableFlag(mvccTable) + "/" + mvccIndexName + "?" + parseValueString(mvccIndexValues)
-		httpPrint(path)
-		return
-	}
-}
-
-func parseValueString(values []string) string {
-	var str string
-	for _, v := range values {
-		str += strings.Replace(v, ":", "=", 1) + "&"
-	}
-	return str[:len(str)-1]
+	Short: "MVCC Information",
+	Long:  "Get for MVCC information",
 }
 
 func init() {
-	rootCmd.AddCommand(mvccCmd)
+	dbFlagName := "database"
+	tableFlagName := "table"
+	handleFlagName := "hid"
+	startTSFlagName := "start-ts"
+	indexNameFlagName := "name"
+	indexValueFlagName := "values"
 
-	mvccCmd.Flags().StringVarP(&mvccTable, "table", "t", "", "Combine with --hid or --start-ts to locate a specified table, database name must included, e.g. `mydb.mytable`.")
-	mvccCmd.Flags().Int64Var(&mvccHID, "hid", 0, "Get MVCC info of the key with a specified handle ID, must combine with --table.")
-	mvccCmd.Flags().Uint64Var(&mvccStartTS, "start-ts", 0, "Get MVCC info of the primary key, or get MVCC info of the first key in the table (with --table) with a specified start ts.")
-	mvccCmd.Flags().StringVar(&mvccIndexName, "index-name", "", "Index Name of a specified index key.")
-	mvccCmd.Flags().StringSliceVar(&mvccIndexValues, "index-values", nil, "Get MVCC info of a specified index key, argument example: `column_name_1: column_value_1, column_name_2: column_value2...`")
+	mvccCmd.AddCommand(keyCmd)
+	mvccCmd.AddCommand(txnCmd)
+	mvccCmd.AddCommand(hexCmd)
+	mvccCmd.AddCommand(idxCmd)
+
+	keyCmd.Flags().StringVarP(&mvccDB, dbFlagName, "d", "", "database name")
+	keyCmd.Flags().StringVarP(&mvccTable, tableFlagName, "t", "", "table name")
+	keyCmd.Flags().Int64VarP(&mvccHID, handleFlagName, "i", 0, "Get MVCC info of the key with a specified handle ID.")
+	keyCmd.MarkFlagRequired(dbFlagName)
+	keyCmd.MarkFlagRequired(tableFlagName)
+	keyCmd.MarkFlagRequired(handleFlagName)
+
+	txnCmd.Flags().StringVarP(&mvccDB, dbFlagName, "d", "", "database name")
+	txnCmd.Flags().StringVarP(&mvccTable, tableFlagName, "t", "", "table name")
+	txnCmd.Flags().Uint64VarP(&mvccStartTS, startTSFlagName, "s", 0,
+		"get MVCC info of the primary key, or get MVCC info of the first key in the table (with --table) with a specified start ts.")
+	txnCmd.MarkFlagRequired(startTSFlagName)
+
+	idxCmd.Flags().StringVarP(&mvccIndexName, indexNameFlagName, "n", "", "index name of a specified index key.")
+	idxCmd.Flags().StringVarP(&mvccDB, dbFlagName, "d", "", "database name")
+	idxCmd.Flags().StringVarP(&mvccTable, tableFlagName, "t", "", "table name")
+	idxCmd.Flags().Int64VarP(&mvccHID, handleFlagName, "i", 0, "Get MVCC info of the key with a specified handle ID.")
+	idxCmd.Flags().StringVarP(&mvccIndexValues, indexValueFlagName, "v", "",
+		"get MVCC info of a specified index key, argument example: `column_name_1=column_value_1&column_name_2=column_value2...`")
+	idxCmd.MarkFlagRequired(indexNameFlagName)
+	idxCmd.MarkFlagRequired(dbFlagName)
+	idxCmd.MarkFlagRequired(tableFlagName)
+	idxCmd.MarkFlagRequired(handleFlagName)
+	idxCmd.MarkFlagRequired(indexValueFlagName)
+}
+
+// keyCmd represents the mvcc command
+var keyCmd = &cobra.Command{
+	Use:   "key",
+	Short: "MVCC Information of table record key",
+	Long:  "tidb-ctl mvcc key --database|-d [database name] --table|-t [table name] --hid|-i [handle]",
+	RunE:  mvccKeyQuery,
+}
+
+func mvccKeyQuery(_ *cobra.Command, args []string) error {
+	if len(args) != 0 {
+		return fmt.Errorf("too many arguments")
+	}
+	return httpPrint(keyPrefix + mvccDB + "/" + mvccTable + "/" + strconv.FormatInt(mvccHID, 10))
+}
+
+// txnCmd represents the mvcc command
+var txnCmd = &cobra.Command{
+	Use:   "txn",
+	Short: "MVCC Information of transaction",
+	Long:  "tidb-ctl mvcc txn --start-ts|-s [start timestamp] --database|-d [database name] --table|-t [table name]",
+	RunE:  mvccTxnQuery,
+}
+
+func mvccTxnQuery(_ *cobra.Command, args []string) error {
+	if len(args) != 0 {
+		return fmt.Errorf("too many arguments")
+	}
+
+	if len(mvccDB) > 0 && len(mvccTable) > 0 {
+		return httpPrint(txnPrefix + strconv.FormatUint(mvccStartTS, 10) + "/" + mvccDB + "/" + mvccTable)
+	} else if len(mvccDB) == 0 && len(mvccTable) == 0 {
+		return httpPrint(txnPrefix + strconv.FormatUint(mvccStartTS, 10))
+	}
+	return fmt.Errorf("wrong arguments, database name and table name should be set simultaneously")
+}
+
+// hexCmd represents the mvcc command
+var hexCmd = &cobra.Command{
+	Use:   "hex",
+	Short: "MVCC Information by a hex value",
+	Long:  "tidb-ctl mvcc hex [hex value]",
+	RunE:  mvccHexQuery,
+}
+
+func mvccHexQuery(_ *cobra.Command, args []string) error {
+	if len(args) != 1 {
+		return fmt.Errorf("need a hex value")
+	}
+	return httpPrint(hexPrefix + args[0])
+}
+
+// idxCmd represents the mvcc command
+var idxCmd = &cobra.Command{
+	Use:   "index",
+	Short: "MVCC Information of index record key",
+	Long: `tidb-ctl mvcc index --database|-d [database name] --table|-t [table name] --hid|-i [handle] [index values]
+index values should be like "column_name_1: column_value_1, column_name_2: column_value2..."`,
+	RunE: mvccIdxQuery,
+}
+
+func mvccIdxQuery(_ *cobra.Command, args []string) error {
+	if len(args) != 0 {
+		return fmt.Errorf("too many arguments")
+	}
+	queryPrefix := idxPrefix + mvccDB + "/" + mvccTable + "/" + mvccIndexName + "/" + strconv.FormatInt(mvccHID, 10) + "?"
+	return httpPrint(queryPrefix + strings.Replace(mvccIndexValues, ",", "&", -1))
 }
