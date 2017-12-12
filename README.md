@@ -1,2 +1,0 @@
-# tidb-ctl
-TiDB Controller
