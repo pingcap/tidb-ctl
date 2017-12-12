@@ -59,7 +59,7 @@ func init() {
 	listTableByIDCmd.MarkFlagRequired(idFlagName)
 }
 
-// listTableByNameCmd represents the schema command
+// listTableByNameCmd represents the list table schema by name command
 var listTableByNameCmd = &cobra.Command{
 	Use:   "in",
 	Short: "Schema Information of Tables In Database",

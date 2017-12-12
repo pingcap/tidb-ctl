@@ -84,7 +84,7 @@ func init() {
 	idxCmd.MarkFlagRequired(indexValueFlagName)
 }
 
-// keyCmd represents the mvcc command
+// keyCmd represents the mvcc by key command
 var keyCmd = &cobra.Command{
 	Use:   "key",
 	Short: "MVCC Information of table record key",
@@ -99,7 +99,7 @@ func mvccKeyQuery(_ *cobra.Command, args []string) error {
 	return httpPrint(keyPrefix + mvccDB + "/" + mvccTable + "/" + strconv.FormatInt(mvccHID, 10))
 }
 
-// txnCmd represents the mvcc command
+// txnCmd represents the mvcc by transaction command
 var txnCmd = &cobra.Command{
 	Use:   "txn",
 	Short: "MVCC Information of transaction",
@@ -120,7 +120,7 @@ func mvccTxnQuery(_ *cobra.Command, args []string) error {
 	return fmt.Errorf("wrong arguments, database name and table name should be set simultaneously")
 }
 
-// hexCmd represents the mvcc command
+// hexCmd represents the mvcc by hex command
 var hexCmd = &cobra.Command{
 	Use:   "hex",
 	Short: "MVCC Information by a hex value",
@@ -135,7 +135,7 @@ func mvccHexQuery(_ *cobra.Command, args []string) error {
 	return httpPrint(hexPrefix + args[0])
 }
 
-// idxCmd represents the mvcc command
+// idxCmd represents the mvcc by index value command
 var idxCmd = &cobra.Command{
 	Use:   "index",
 	Short: "MVCC Information of index record key",
