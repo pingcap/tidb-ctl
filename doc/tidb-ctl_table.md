@@ -1,6 +1,6 @@
 ## tidb-ctl table
 
-get table information
+Table information
 
 ### Synopsis
 

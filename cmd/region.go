@@ -27,10 +27,10 @@ const (
 // regionCmd represents the region command
 var regionRootCmd = &cobra.Command{
 	Use:   "region",
-	Short: "get region information",
+	Short: "Region information",
 	Long: `tidb-ctl region [region id]
-	If no region id specified, it will return region info where
-	meta data located.`,
+If no region id specified, it will return region info where
+meta data located.`,
 	RunE: getRegionInfo,
 }
 

@@ -33,7 +33,7 @@ var (
 // tableCmd represents the table command
 var tableRootCmd = &cobra.Command{
 	Use:   "table",
-	Short: "get table information",
+	Short: "Table information",
 	Long: `tidb-ctl table`,
 }
 

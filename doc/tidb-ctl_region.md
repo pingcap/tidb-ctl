@@ -1,13 +1,13 @@
 ## tidb-ctl region
 
-get region information
+Region information
 
 ### Synopsis
 
 
 tidb-ctl region [region id]
-	If no region id specified, it will return region info where
-	meta data located.
+If no region id specified, it will return region info where
+meta data located.
 
 ```
 tidb-ctl region [flags]
