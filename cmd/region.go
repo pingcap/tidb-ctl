@@ -15,24 +15,35 @@ package cmd
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/spf13/cobra"
 )
 
-// regionCmd represents the region command
-var regionCmd = &cobra.Command{
-	Use:   "region",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+const (
+	regionPrefix = "regions/"
+)
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("region called")
-	},
+// regionCmd represents the region command
+var regionRootCmd = &cobra.Command{
+	Use:   "region",
+	Short: "get region information",
+	Long: `tidb-ctl region [region id]
+	If no region id specified, it will return region info where
+	meta data located.`,
+	RunE: getRegionInfo,
 }
 
-func init() {
+func getRegionInfo(_ *cobra.Command, args []string) error {
+	switch len(args) {
+	case 0:
+		return httpPrint(regionPrefix + "meta")
+	case 1:
+		if _, err := strconv.ParseUint(args[0], 10, 64); err != nil {
+			return err
+		}
+		return httpPrint(regionPrefix + args[0])
+	default:
+		return fmt.Errorf("too many arguments")
+	}
 }

@@ -50,8 +50,7 @@ func listDatabases(_ *cobra.Command, args []string) error {
 func init() {
 	idFlagName := "id"
 
-	schemaRootCmd.AddCommand(listTableByNameCmd)
-	schemaRootCmd.AddCommand(listTableByIDCmd)
+	schemaRootCmd.AddCommand(listTableByNameCmd, listTableByIDCmd)
 
 	listTableByNameCmd.Flags().StringVarP(&schemaTable, "name", "n", "", "get schema info of a specified table.")
 	listTableByIDCmd.Flags().Int64VarP(&schemaTID, idFlagName, "i", 0, "get schema info of a specified table id.")

@@ -39,28 +39,23 @@ var (
 )
 
 // mvccCmd represents the mvcc command
-var mvccCmd = &cobra.Command{
+var mvccRootCmd = &cobra.Command{
 	Use:   "mvcc",
 	Short: "MVCC Information",
 	Long:  "Get for MVCC information",
 }
 
 func init() {
-	dbFlagName := "database"
-	tableFlagName := "table"
 	handleFlagName := "hid"
 	startTSFlagName := "start-ts"
 	indexNameFlagName := "name"
 	indexValueFlagName := "values"
 
-	mvccCmd.AddCommand(keyCmd)
-	mvccCmd.AddCommand(txnCmd)
-	mvccCmd.AddCommand(hexCmd)
-	mvccCmd.AddCommand(idxCmd)
+	mvccRootCmd.AddCommand(keyCmd, txnCmd, hexCmd, idxCmd)
 
 	keyCmd.Flags().StringVarP(&mvccDB, dbFlagName, "d", "", "database name")
 	keyCmd.Flags().StringVarP(&mvccTable, tableFlagName, "t", "", "table name")
-	keyCmd.Flags().Int64VarP(&mvccHID, handleFlagName, "i", 0, "Get MVCC info of the key with a specified handle ID.")
+	keyCmd.Flags().Int64VarP(&mvccHID, handleFlagName, "i", 0, "get MVCC info of the key with a specified handle ID.")
 	keyCmd.MarkFlagRequired(dbFlagName)
 	keyCmd.MarkFlagRequired(tableFlagName)
 	keyCmd.MarkFlagRequired(handleFlagName)
@@ -74,7 +69,7 @@ func init() {
 	idxCmd.Flags().StringVarP(&mvccIndexName, indexNameFlagName, "n", "", "index name of a specified index key.")
 	idxCmd.Flags().StringVarP(&mvccDB, dbFlagName, "d", "", "database name")
 	idxCmd.Flags().StringVarP(&mvccTable, tableFlagName, "t", "", "table name")
-	idxCmd.Flags().Int64VarP(&mvccHID, handleFlagName, "i", 0, "Get MVCC info of the key with a specified handle ID.")
+	idxCmd.Flags().Int64VarP(&mvccHID, handleFlagName, "i", 0, "get MVCC info of the key with a specified handle ID.")
 	idxCmd.Flags().StringVarP(&mvccIndexValues, indexValueFlagName, "v", "",
 		"get MVCC info of a specified index key, argument example: `column_name_1=column_value_1&column_name_2=column_value2...`")
 	idxCmd.MarkFlagRequired(indexNameFlagName)
