@@ -20,7 +20,7 @@ import (
 )
 
 // regionCmd represents the region command
-var regionCmd = &cobra.Command{
+var regionRootCmd = &cobra.Command{
 	Use:   "region",
 	Short: "A brief description of your command",
 	Long: `A longer description that spans multiple lines and likely contains examples

@@ -24,19 +24,40 @@ import (
 	"strconv"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/cobra/doc"
 )
 
 // root command flags
 var (
-	host net.IP
-	port uint16
+	host   net.IP
+	port   uint16
+	genDoc bool
+)
+
+const (
+	rootUse   = "tidb-ctl"
+	rootShort = "TiDB Controller"
+	rootLong  = "TiDB Controller (tidb-ctl) is a command line tool for TiDB Server (tidb-server)."
 )
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "tidb-ctl",
-	Short: "TiDB Controller",
-	Long:  `TiDB Controller (tidb-ctl) is a command line tool for TiDB Server (tidb-server).`,
+	Use:   rootUse,
+	Short: rootShort,
+	Long:  rootLong,
+	RunE: func(_ *cobra.Command, args []string) error {
+		if !genDoc {
+			return nil
+		}
+		docDir := "./doc"
+		docCmd := &cobra.Command{
+			Use:   rootUse,
+			Short: rootShort,
+			Long:  rootLong,
+		}
+		docCmd.AddCommand(mvccRootCmd, schemaRootCmd, regionRootCmd)
+		return doc.GenMarkdownTree(docCmd, docDir)
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -71,12 +92,14 @@ func init() {
 	hostFlagName := "host"
 	portFlagName := "port"
 
-	rootCmd.AddCommand(mvccCmd)
-	rootCmd.AddCommand(regionCmd)
+	rootCmd.AddCommand(mvccRootCmd)
+	rootCmd.AddCommand(regionRootCmd)
 	rootCmd.AddCommand(schemaRootCmd)
 
 	rootCmd.PersistentFlags().IPVarP(&host, hostFlagName, "H", net.IP("127.0.0.1"), "TiDB server host")
 	rootCmd.PersistentFlags().Uint16VarP(&port, portFlagName, "P", 10080, "TiDB server port")
 	rootCmd.MarkPersistentFlagRequired(hostFlagName)
 	rootCmd.MarkPersistentFlagRequired(portFlagName)
+	rootCmd.Flags().BoolVar(&genDoc, "doc", false, "generate doc file")
+	rootCmd.Flags().MarkHidden("doc")
 }
