@@ -35,9 +35,11 @@ var (
 )
 
 const (
-	rootUse   = "tidb-ctl"
-	rootShort = "TiDB Controller"
-	rootLong  = "TiDB Controller (tidb-ctl) is a command line tool for TiDB Server (tidb-server)."
+	rootUse       = "tidb-ctl"
+	rootShort     = "TiDB Controller"
+	rootLong      = "TiDB Controller (tidb-ctl) is a command line tool for TiDB Server (tidb-server)."
+	dbFlagName    = "database"
+	tableFlagName = "table"
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -55,7 +57,7 @@ var rootCmd = &cobra.Command{
 			Short: rootShort,
 			Long:  rootLong,
 		}
-		docCmd.AddCommand(mvccRootCmd, schemaRootCmd, regionRootCmd)
+		docCmd.AddCommand(mvccRootCmd, schemaRootCmd, regionRootCmd, tableRootCmd)
 		return doc.GenMarkdownTree(docCmd, docDir)
 	},
 }
@@ -70,7 +72,8 @@ func Execute() {
 }
 
 func httpPrint(path string) error {
-	resp, err := http.Get("http://" + host.String() + ":" + strconv.Itoa(int(port)) + "/" + path)
+	url := "http://" + host.String() + ":" + strconv.Itoa(int(port)) + "/" + path
+	resp, err := http.Get(url)
 	if err != nil {
 		return err
 	}
@@ -92,9 +95,7 @@ func init() {
 	hostFlagName := "host"
 	portFlagName := "port"
 
-	rootCmd.AddCommand(mvccRootCmd)
-	rootCmd.AddCommand(regionRootCmd)
-	rootCmd.AddCommand(schemaRootCmd)
+	rootCmd.AddCommand(mvccRootCmd, schemaRootCmd, regionRootCmd, tableRootCmd)
 
 	rootCmd.PersistentFlags().IPVarP(&host, hostFlagName, "H", net.IP("127.0.0.1"), "TiDB server host")
 	rootCmd.PersistentFlags().Uint16VarP(&port, portFlagName, "P", 10080, "TiDB server port")

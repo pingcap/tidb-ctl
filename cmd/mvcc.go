@@ -46,17 +46,12 @@ var mvccRootCmd = &cobra.Command{
 }
 
 func init() {
-	dbFlagName := "database"
-	tableFlagName := "table"
 	handleFlagName := "hid"
 	startTSFlagName := "start-ts"
 	indexNameFlagName := "name"
 	indexValueFlagName := "values"
 
-	mvccRootCmd.AddCommand(keyCmd)
-	mvccRootCmd.AddCommand(txnCmd)
-	mvccRootCmd.AddCommand(hexCmd)
-	mvccRootCmd.AddCommand(idxCmd)
+	mvccRootCmd.AddCommand(keyCmd, txnCmd, hexCmd, idxCmd)
 
 	keyCmd.Flags().StringVarP(&mvccDB, dbFlagName, "d", "", "database name")
 	keyCmd.Flags().StringVarP(&mvccTable, tableFlagName, "t", "", "table name")
