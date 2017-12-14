@@ -56,7 +56,10 @@ func init() {
 	listTableByNameCmd.Flags().StringVarP(&schemaTable, "name", "n", "", "get schema info of a specified table.")
 	listTableByIDCmd.Flags().Int64VarP(&schemaTID, idFlagName, "i", 0, "get schema info of a specified table id.")
 
-	listTableByIDCmd.MarkFlagRequired(idFlagName)
+	if err := listTableByIDCmd.MarkFlagRequired(idFlagName); err != nil {
+		fmt.Printf("can not mark required flag, flag %s is not found", idFlagName)
+		return
+	}
 }
 
 // listTableByNameCmd represents the list table schema by name command
