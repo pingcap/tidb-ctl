@@ -56,15 +56,27 @@ func init() {
 	keyCmd.Flags().StringVarP(&mvccDB, dbFlagName, "d", "", "database name")
 	keyCmd.Flags().StringVarP(&mvccTable, tableFlagName, "t", "", "table name")
 	keyCmd.Flags().Int64VarP(&mvccHID, handleFlagName, "i", 0, "get MVCC info of the key with a specified handle ID.")
-	keyCmd.MarkFlagRequired(dbFlagName)
-	keyCmd.MarkFlagRequired(tableFlagName)
-	keyCmd.MarkFlagRequired(handleFlagName)
+	if err := keyCmd.MarkFlagRequired(dbFlagName); err != nil {
+		fmt.Printf("can not mark required flag, flag %s is not found", dbFlagName)
+		return
+	}
+	if err := keyCmd.MarkFlagRequired(tableFlagName); err != nil {
+		fmt.Printf("can not mark required flag, flag %s is not found", tableFlagName)
+		return
+	}
+	if err := keyCmd.MarkFlagRequired(handleFlagName); err != nil {
+		fmt.Printf("can not mark required flag, flag %s is not found", handleFlagName)
+		return
+	}
 
 	txnCmd.Flags().StringVarP(&mvccDB, dbFlagName, "d", "", "database name")
 	txnCmd.Flags().StringVarP(&mvccTable, tableFlagName, "t", "", "table name")
 	txnCmd.Flags().Uint64VarP(&mvccStartTS, startTSFlagName, "s", 0,
 		"get MVCC info of the primary key, or get MVCC info of the first key in the table (with --table) with a specified start ts.")
-	txnCmd.MarkFlagRequired(startTSFlagName)
+	if err := txnCmd.MarkFlagRequired(startTSFlagName); err != nil {
+		fmt.Printf("can not mark required flag, flag %s is not found", startTSFlagName)
+		return
+	}
 
 	idxCmd.Flags().StringVarP(&mvccIndexName, indexNameFlagName, "n", "", "index name of a specified index key.")
 	idxCmd.Flags().StringVarP(&mvccDB, dbFlagName, "d", "", "database name")
@@ -72,11 +84,26 @@ func init() {
 	idxCmd.Flags().Int64VarP(&mvccHID, handleFlagName, "i", 0, "get MVCC info of the key with a specified handle ID.")
 	idxCmd.Flags().StringVarP(&mvccIndexValues, indexValueFlagName, "v", "",
 		"get MVCC info of a specified index key, argument example: `column_name_1=column_value_1&column_name_2=column_value2...`")
-	idxCmd.MarkFlagRequired(indexNameFlagName)
-	idxCmd.MarkFlagRequired(dbFlagName)
-	idxCmd.MarkFlagRequired(tableFlagName)
-	idxCmd.MarkFlagRequired(handleFlagName)
-	idxCmd.MarkFlagRequired(indexValueFlagName)
+	if err := idxCmd.MarkFlagRequired(indexNameFlagName); err != nil {
+		fmt.Printf("can not mark required flag, flag %s is not found", indexNameFlagName)
+		return
+	}
+	if err := idxCmd.MarkFlagRequired(dbFlagName); err != nil {
+		fmt.Printf("can not mark required flag, flag %s is not found", dbFlagName)
+		return
+	}
+	if err := idxCmd.MarkFlagRequired(tableFlagName); err != nil {
+		fmt.Printf("can not mark required flag, flag %s is not found", tableFlagName)
+		return
+	}
+	if err := idxCmd.MarkFlagRequired(handleFlagName); err != nil {
+		fmt.Printf("can not mark required flag, flag %s is not found", handleFlagName)
+		return
+	}
+	if err := idxCmd.MarkFlagRequired(indexValueFlagName); err != nil {
+		fmt.Printf("can not mark required flag, flag %s is not found", indexValueFlagName)
+		return
+	}
 }
 
 // keyCmd represents the mvcc by key command

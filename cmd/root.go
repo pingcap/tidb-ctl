@@ -77,7 +77,11 @@ func httpPrint(path string) error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if errClose := resp.Body.Close(); errClose != nil && err == nil {
+			err = errClose
+		}
+	}()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err
@@ -94,13 +98,23 @@ func httpPrint(path string) error {
 func init() {
 	hostFlagName := "host"
 	portFlagName := "port"
+	docFlagName := "doc"
 
 	rootCmd.AddCommand(mvccRootCmd, schemaRootCmd, regionRootCmd, tableRootCmd)
 
 	rootCmd.PersistentFlags().IPVarP(&host, hostFlagName, "H", net.IP("127.0.0.1"), "TiDB server host")
 	rootCmd.PersistentFlags().Uint16VarP(&port, portFlagName, "P", 10080, "TiDB server port")
-	rootCmd.MarkPersistentFlagRequired(hostFlagName)
-	rootCmd.MarkPersistentFlagRequired(portFlagName)
-	rootCmd.Flags().BoolVar(&genDoc, "doc", false, "generate doc file")
-	rootCmd.Flags().MarkHidden("doc")
+	if err := rootCmd.MarkPersistentFlagRequired(hostFlagName); err != nil {
+		fmt.Printf("can not mark required flag, flag %s is not found", hostFlagName)
+		return
+	}
+	if err := rootCmd.MarkPersistentFlagRequired(portFlagName); err != nil {
+		fmt.Printf("can not mark required flag, flag %s is not found", portFlagName)
+		return
+	}
+	rootCmd.Flags().BoolVar(&genDoc, docFlagName, false, "generate doc file")
+	if err := rootCmd.Flags().MarkHidden(docFlagName); err != nil {
+		fmt.Printf("can not mark hidden flag, flag %s is not found", docFlagName)
+		return
+	}
 }
