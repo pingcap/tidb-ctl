@@ -42,11 +42,11 @@ func init() {
 	tableRootCmd.PersistentFlags().StringVarP(&tableDB, dbFlagName, "d", "", "database name")
 	tableRootCmd.PersistentFlags().StringVarP(&tableTable, tableFlagName, "t", "", "table name")
 	if err := tableRootCmd.MarkPersistentFlagRequired(dbFlagName); err != nil {
-		fmt.Errorf("can not set persistent flag, flag %s not found", dbFlagName)
+		fmt.Errorf("can not set required flag, flag %s is not found", dbFlagName)
 		return
 	}
 	if err := tableRootCmd.MarkPersistentFlagRequired(tableFlagName); err != nil {
-		fmt.Errorf("can not set persistent flag, flag %s not found", tableFlagName)
+		fmt.Errorf("can not set required flag, flag %s is not found", tableFlagName)
 		return
 	}
 }
