@@ -34,7 +34,7 @@ var (
 var tableRootCmd = &cobra.Command{
 	Use:   "table",
 	Short: "Table information",
-	Long: `tidb-ctl table`,
+	Long:  `tidb-ctl table`,
 }
 
 func init() {
@@ -42,11 +42,11 @@ func init() {
 	tableRootCmd.PersistentFlags().StringVarP(&tableDB, dbFlagName, "d", "", "database name")
 	tableRootCmd.PersistentFlags().StringVarP(&tableTable, tableFlagName, "t", "", "table name")
 	if err := tableRootCmd.MarkPersistentFlagRequired(dbFlagName); err != nil {
-		fmt.Errorf("can not mark required flag, flag %s is not found", dbFlagName)
+		fmt.Printf("can not mark required flag, flag %s is not found", dbFlagName)
 		return
 	}
 	if err := tableRootCmd.MarkPersistentFlagRequired(tableFlagName); err != nil {
-		fmt.Errorf("can not mark required flag, flag %s is not found", tableFlagName)
+		fmt.Printf("can not mark required flag, flag %s is not found", tableFlagName)
 		return
 	}
 }
