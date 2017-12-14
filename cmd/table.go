@@ -41,8 +41,14 @@ func init() {
 	tableRootCmd.AddCommand(regionCmd, diskUsageCmd)
 	tableRootCmd.PersistentFlags().StringVarP(&tableDB, dbFlagName, "d", "", "database name")
 	tableRootCmd.PersistentFlags().StringVarP(&tableTable, tableFlagName, "t", "", "table name")
-	tableRootCmd.MarkPersistentFlagRequired(dbFlagName)
-	tableRootCmd.MarkPersistentFlagRequired(tableFlagName)
+	if err := tableRootCmd.MarkPersistentFlagRequired(dbFlagName); err != nil {
+		fmt.Errorf("can not set persistent flag, flag %s not found", dbFlagName)
+		return
+	}
+	if err := tableRootCmd.MarkPersistentFlagRequired(tableFlagName); err != nil {
+		fmt.Errorf("can not set persistent flag, flag %s not found", tableFlagName)
+		return
+	}
 }
 
 var regionCmd = &cobra.Command{
