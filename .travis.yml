@@ -1,0 +1,21 @@
+language: go
+
+go_import_path: github.com/pingcap/tidb-ctl
+
+go:
+  - 1.9.x
+
+# Run coverage tests.
+matrix:
+  fast_finish: true
+  allow_failures:
+    - go: 1.9.x
+
+before_install:  
+  # create /logs/unit-test for unit test.
+  - sudo mkdir /logs
+  - sudo touch /logs/unit-test
+  # See https://github.com/golang/go/issues/12933
+  - bash gitcookie.sh
+script:
+  - make dev

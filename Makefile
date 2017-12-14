@@ -5,7 +5,7 @@ ifeq "$(GOPATH)" ""
   $(error Please set the environment variable GOPATH before running `make`)
 endif
 
-PACKAGES  := $$(go list ./...| grep -vE "vendor")
+PACKAGES  := $$(go list ./...)
 FILES     := $$(find . -name "*.go" | grep -vE "vendor")
 TOPDIRS   := $$(ls -d */ | grep -vE "vendor")
 
@@ -24,7 +24,7 @@ check:
 
 	@echo "golint"
 	go get github.com/golang/lint/golint
-	@ golint ./... 2>&1 | grep -vE 'context\.Context|LastInsertId|NewLexer|\.pb\.go' | awk '{print} END{if(NR>0) {exit 1}}'
+	@ golint -set_exit_status $(PACKAGES)
 
 	@echo "errcheck"
 	go get github.com/kisielk/errcheck
