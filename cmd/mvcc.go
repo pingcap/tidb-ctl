@@ -83,7 +83,7 @@ func init() {
 	idxCmd.Flags().StringVarP(&mvccTable, tableFlagName, "t", "", "table name")
 	idxCmd.Flags().Int64VarP(&mvccHID, handleFlagName, "i", 0, "get MVCC info of the key with a specified handle ID.")
 	idxCmd.Flags().StringVarP(&mvccIndexValues, indexValueFlagName, "v", "",
-		"get MVCC info of a specified index key, argument example: `column_name_1=column_value_1&column_name_2=column_value2...`")
+		"get MVCC info of a specified index key, argument example: `column_name_1=column_value_1,column_name_2=column_value2...`")
 	if err := idxCmd.MarkFlagRequired(indexNameFlagName); err != nil {
 		fmt.Printf("can not mark required flag, flag %s is not found", indexNameFlagName)
 		return
@@ -110,7 +110,7 @@ func init() {
 var keyCmd = &cobra.Command{
 	Use:   "key",
 	Short: "MVCC Information of table record key",
-	Long:  "tidb-ctl mvcc key --database|-d [database name] --table|-t [table name] --hid|-i [handle]",
+	Long:  "tidb-ctl mvcc key --database(-d) [database name] --table(-t) [table name] --hid(-i) [handle]",
 	RunE:  mvccKeyQuery,
 }
 
@@ -125,7 +125,7 @@ func mvccKeyQuery(_ *cobra.Command, args []string) error {
 var txnCmd = &cobra.Command{
 	Use:   "txn",
 	Short: "MVCC Information of transaction",
-	Long:  "tidb-ctl mvcc txn --start-ts|-s [start timestamp] --database|-d [database name] --table|-t [table name]",
+	Long:  "tidb-ctl mvcc txn --start-ts(-s) [start timestamp] --database(-d) [database name] --table(-t) [table name]",
 	RunE:  mvccTxnQuery,
 }
 
@@ -161,8 +161,8 @@ func mvccHexQuery(_ *cobra.Command, args []string) error {
 var idxCmd = &cobra.Command{
 	Use:   "index",
 	Short: "MVCC Information of index record key",
-	Long: `tidb-ctl mvcc index --database|-d [database name] --table|-t [table name] --hid|-i [handle] [index values]
-index values should be like "column_name_1: column_value_1, column_name_2: column_value2..."`,
+	Long: `tidb-ctl mvcc index --database(-d) [database name] --table(-t) [table name] --hid(-i) [handle] [index values]
+index values should be like "column_name_1:column_value_1,column_name_2:column_value2..."`,
 	RunE: mvccIdxQuery,
 }
 

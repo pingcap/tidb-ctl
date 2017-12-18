@@ -54,7 +54,7 @@ func init() {
 var regionCmd = &cobra.Command{
 	Use:   regionSuffix,
 	Short: "region info of table",
-	Long:  "tidb-ctl table region --database|-d [database name] --table|-t [table name]",
+	Long:  "tidb-ctl table region --database(-d) [database name] --table(-t) [table name]",
 	RunE:  getTableRegion,
 }
 
@@ -68,7 +68,7 @@ func getTableRegion(_ *cobra.Command, args []string) error {
 var diskUsageCmd = &cobra.Command{
 	Use:   usageSurffix,
 	Short: "disk usage of table",
-	Long:  "tidb-ctl table disk-usage --database|-d [database name] --table|-t [table name]",
+	Long:  "tidb-ctl table disk-usage --database(-d) [database name] --table(-t) [table name]",
 	RunE:  getTableDiskUsage,
 }
 
