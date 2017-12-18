@@ -35,4 +35,4 @@ test: check
 
 doc:
 	@mkdir -p doc
-	@ go run main.go -H127.0.0.1 -P1234 --doc
+	@ go run main.go --doc
