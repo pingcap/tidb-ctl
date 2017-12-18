@@ -162,7 +162,8 @@ var idxCmd = &cobra.Command{
 	Use:   "index",
 	Short: "MVCC Information of index record key",
 	Long: `tidb-ctl mvcc index --database(-d) [database name] --table(-t) [table name] --hid(-i) [handle] [index values]
-index values should be like "column_name_1:column_value_1,column_name_2:column_value2..."`,
+
+	index values should be like "column_name_1:column_value_1,column_name_2:column_value2..."`,
 	RunE: mvccIdxQuery,
 }
 

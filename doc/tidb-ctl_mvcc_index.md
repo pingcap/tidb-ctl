@@ -6,7 +6,8 @@ MVCC Information of index record key
 
 
 tidb-ctl mvcc index --database(-d) [database name] --table(-t) [table name] --hid(-i) [handle] [index values]
-index values should be like "column_name_1:column_value_1,column_name_2:column_value2..."
+
+	index values should be like "column_name_1:column_value_1,column_name_2:column_value2..."
 
 ```
 tidb-ctl mvcc index [flags]

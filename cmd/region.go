@@ -36,8 +36,8 @@ var regionRootCmd = &cobra.Command{
 	Use:   "region",
 	Short: "Region information",
 	Long: `tidb-ctl region --meta(-m) | --rid(-i) [region id]
-	--meta will return region info where meta data located.
-	--rid will return region info by region id`,
+* --meta will return region info where meta data located
+* --rid will return region info by region id`,
 	RunE: getRegionInfo,
 }
 
