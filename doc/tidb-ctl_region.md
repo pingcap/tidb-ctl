@@ -6,8 +6,8 @@ Region information
 
 
 tidb-ctl region --meta(-m) | --rid(-i) [region id]
---meta will return region info where meta data located.
---rid will return region info by region id
+	--meta will return region info where meta data located.
+	--rid will return region info by region id
 
 ```
 tidb-ctl region [flags]
