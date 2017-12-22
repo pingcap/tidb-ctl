@@ -21,29 +21,43 @@ import (
 )
 
 const (
-	regionPrefix = "regions/"
+	regionPrefix     = "regions/"
+	metaFlagName     = "meta"
+	regionIDFlagName = "rid"
+)
+
+var (
+	isMeta   bool
+	regionID uint64
 )
 
 // regionCmd represents the region command
 var regionRootCmd = &cobra.Command{
 	Use:   "region",
 	Short: "Region information",
-	Long: `tidb-ctl region [region id]
-If no region id specified, it will return region info where
-meta data located.`,
+	Long: `tidb-ctl region --meta(-m) | --rid(-i) [region id]
+* --meta will return region info where meta data located
+* --rid will return region info by region id`,
 	RunE: getRegionInfo,
 }
 
-func getRegionInfo(_ *cobra.Command, args []string) error {
-	switch len(args) {
-	case 0:
-		return httpPrint(regionPrefix + "meta")
-	case 1:
-		if _, err := strconv.ParseUint(args[0], 10, 64); err != nil {
-			return err
-		}
-		return httpPrint(regionPrefix + args[0])
-	default:
+func init() {
+	regionRootCmd.Flags().BoolVarP(&isMeta, metaFlagName, "m", false, "region info where meta data located")
+	regionRootCmd.Flags().Uint64VarP(&regionID, regionIDFlagName, "i", 0, "region id")
+}
+
+func getRegionInfo(c *cobra.Command, args []string) error {
+	if len(args) != 0 {
 		return fmt.Errorf("too many arguments")
 	}
+	if c.Flag(metaFlagName).Changed && c.Flag(regionIDFlagName).Changed {
+		return fmt.Errorf("%s and %s can not be set simultaneously", metaFlagName, regionIDFlagName)
+	}
+	if c.Flag(metaFlagName).Changed {
+		return httpPrint(regionPrefix + "meta")
+	}
+	if c.Flag(regionIDFlagName).Changed {
+		return httpPrint(regionPrefix + strconv.FormatUint(regionID, 10))
+	}
+	return c.Usage()
 }

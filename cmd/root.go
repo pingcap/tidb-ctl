@@ -47,19 +47,26 @@ var rootCmd = &cobra.Command{
 	Use:   rootUse,
 	Short: rootShort,
 	Long:  rootLong,
-	RunE: func(_ *cobra.Command, args []string) error {
-		if !genDoc {
-			return nil
-		}
-		docDir := "./doc"
-		docCmd := &cobra.Command{
-			Use:   rootUse,
-			Short: rootShort,
-			Long:  rootLong,
-		}
-		docCmd.AddCommand(mvccRootCmd, schemaRootCmd, regionRootCmd, tableRootCmd)
-		return doc.GenMarkdownTree(docCmd, docDir)
-	},
+	RunE:  genDocument,
+}
+
+func genDocument(c *cobra.Command, args []string) error {
+	if !genDoc || len(args) != 0 {
+		return c.Usage()
+	}
+	docDir := "./doc"
+	docCmd := &cobra.Command{
+		Use:   rootUse,
+		Short: rootShort,
+		Long:  rootLong,
+	}
+	docCmd.AddCommand(mvccRootCmd, schemaRootCmd, regionRootCmd, tableRootCmd)
+	fmt.Println("Generating documents...")
+	if err := doc.GenMarkdownTree(docCmd, docDir); err != nil {
+		return err
+	}
+	fmt.Println("Done!")
+	return nil
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -85,6 +92,11 @@ func httpPrint(path string) error {
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err
+	}
+	if resp.StatusCode != http.StatusOK {
+		// Print response body directly if status is not ok.
+		fmt.Println(string(body))
+		return nil
 	}
 	var prettyJSON bytes.Buffer
 	err = json.Indent(&prettyJSON, body, "", "    ")

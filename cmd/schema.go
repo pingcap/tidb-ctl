@@ -68,7 +68,7 @@ var listTableByNameCmd = &cobra.Command{
 	Long: `Get for Schema information, e.g.
 * tidb-ctl schema in [database name]
 Show all tables schema info of specified database.
-* tidb-ctl schema in [database name] --name|-n [table name]
+* tidb-ctl schema in [database name] --name(-n) [table name]
 Get schema info of a specified table in database.
 `,
 	RunE: listTableByName,
@@ -87,7 +87,7 @@ func listTableByName(_ *cobra.Command, args []string) error {
 var listTableByIDCmd = &cobra.Command{
 	Use:   "tid",
 	Short: "Schema Information of Tables By TableID",
-	Long:  "'tidb-ctl schema tid --id|-i [tableID]' to get schema info of a specified table id.",
+	Long:  "'tidb-ctl schema tid --id(-i) [tableID]' to get schema info of a specified table id.",
 	RunE:  listTableByID,
 }
 
