@@ -24,13 +24,12 @@ import (
 )
 
 var (
-	inputValue    string
-	valueFlagName string
+	inputValue string
 )
 
 // base64decodeCmd represents the base64decode command
 var base64decodeCmd = &cobra.Command{
-	Use:   "base64decode <value>",
+	Use:   "base64decode -v <value>",
 	Short: "decode base64 value to hex and uint64",
 	Long:  "decode base64 value to hex and uint64",
 	RunE:  base64decode,
@@ -44,10 +43,10 @@ func base64decode(_ *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	hexStr := hex.EncodeToString(uDec)
-	fmt.Printf("hex: %s\n", hexStr)
 	if len(uDec) <= 8 {
 		var num uint64
+		hexStr := hex.EncodeToString(uDec)
+		fmt.Printf("hex: %s\n", hexStr)
 		err = binary.Read(bytes.NewBuffer(uDec[0:8]), binary.BigEndian, &num)
 		if err != nil {
 			return err
@@ -58,5 +57,5 @@ func base64decode(_ *cobra.Command, args []string) error {
 }
 
 func init() {
-	base64decodeCmd.Flags().StringVarP(&inputValue, valueFlagName, "v", "", "the value you want decode")
+	base64decodeCmd.Flags().StringVarP(&inputValue, "value", "v", "", "the value you want decode")
 }
