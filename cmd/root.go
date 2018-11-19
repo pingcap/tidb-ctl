@@ -112,7 +112,7 @@ func init() {
 	portFlagName := "port"
 	docFlagName := "doc"
 
-	rootCmd.AddCommand(mvccRootCmd, schemaRootCmd, regionRootCmd, tableRootCmd)
+	rootCmd.AddCommand(mvccRootCmd, schemaRootCmd, regionRootCmd, tableRootCmd, base64decodeCmd, decoderCmd)
 
 	rootCmd.PersistentFlags().IPVarP(&host, hostFlagName, "H", net.ParseIP("127.0.0.1"), "TiDB server host")
 	rootCmd.PersistentFlags().Uint16VarP(&port, portFlagName, "P", 10080, "TiDB server port")
