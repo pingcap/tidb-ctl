@@ -30,12 +30,20 @@ var (
 	keyValue  string
 )
 
+const (
+	formatFlagName = "format"
+	keyFlagName    = "key"
+)
+
 // decoderCmd represents the key-decoder command
 var decoderCmd = &cobra.Command{
-	Use:   "decoder -f <key-format> -k <key>",
-	Short: "decode tabel_row/table_index/value format key to readable format",
-	Long:  "decode tabel_row/table_index/value format key to readable format",
-	RunE:  decodeKeyFunc,
+	Use:   "decoder",
+	Short: "decode key",
+	Long: `decode --format (tabel_row/table_index/value) --key (key)
+	table_row:   key format like 'txxx_rxxx'
+	table_index: key format like 'txxx_ixxx'
+	value:       base64 encoded value`,
+	RunE: decodeKeyFunc,
 }
 
 func decodeKey(text string) (string, error) {
@@ -151,6 +159,6 @@ func decodeKeyFunc(_ *cobra.Command, args []string) error {
 }
 
 func init() {
-	decoderCmd.Flags().StringVarP(&keyFormat, "format", "f", "", "the key format you want decode")
-	decoderCmd.Flags().StringVarP(&keyValue, "key", "k", "", "the key you want decode")
+	decoderCmd.Flags().StringVarP(&keyFormat, formatFlagName, "f", "", "the key format you want decode")
+	decoderCmd.Flags().StringVarP(&keyValue, keyFlagName, "k", "", "the key you want decode")
 }

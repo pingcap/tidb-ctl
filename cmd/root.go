@@ -60,7 +60,7 @@ func genDocument(c *cobra.Command, args []string) error {
 		Short: rootShort,
 		Long:  rootLong,
 	}
-	docCmd.AddCommand(mvccRootCmd, schemaRootCmd, regionRootCmd, tableRootCmd)
+	docCmd.AddCommand(mvccRootCmd, schemaRootCmd, regionRootCmd, tableRootCmd, decoderCmd, base64decodeCmd)
 	fmt.Println("Generating documents...")
 	if err := doc.GenMarkdownTree(docCmd, docDir); err != nil {
 		return err

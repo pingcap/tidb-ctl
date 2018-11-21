@@ -29,8 +29,8 @@ var (
 
 // base64decodeCmd represents the base64decode command
 var base64decodeCmd = &cobra.Command{
-	Use:   "base64decode -v <value>",
-	Short: "decode base64 value to hex and uint64",
+	Use:   "base64decode",
+	Short: "decode base64 value",
 	Long:  "decode base64 value to hex and uint64",
 	RunE:  base64decode,
 }
