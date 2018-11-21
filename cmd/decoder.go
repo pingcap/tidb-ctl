@@ -20,6 +20,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/pingcap/tidb/types"
 	"github.com/pingcap/tidb/util/codec"
 	"github.com/spf13/cobra"
 )
@@ -35,28 +36,6 @@ var decoderCmd = &cobra.Command{
 	Short: "decode tabel_row/table_index/value format key to readable format",
 	Long:  "decode tabel_row/table_index/value format key to readable format",
 	RunE:  decodeKeyFunc,
-}
-
-var indexTypeToString = map[byte]string{
-	0:  "Null",
-	1:  "Int64",
-	2:  "Uint64",
-	3:  "Float32",
-	4:  "Float64",
-	5:  "String",
-	6:  "Bytes",
-	7:  "BinaryLiteral",
-	8:  "MysqlDecimal",
-	9:  "MysqlDuration",
-	10: "MysqlEnum",
-	11: "MysqlBit",
-	12: "MysqlSet",
-	13: "MysqlTime",
-	14: "Interface",
-	15: "MinNotNull",
-	16: "MaxValue",
-	17: "Raw",
-	18: "MysqlJSON",
 }
 
 func decodeKey(text string) (string, error) {
@@ -108,7 +87,8 @@ func decodeIndexValue(buf []byte) {
 			break
 		} else {
 			s, _ := d.ToString()
-			fmt.Printf("type: %v, value: %v\n", indexTypeToString[d.Kind()], s)
+			typeStr := types.KindStr(d.Kind())
+			fmt.Printf("type: %v, value: %v\n", typeStr, s)
 		}
 		key = remain
 	}
