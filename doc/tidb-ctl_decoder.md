@@ -1,4 +1,4 @@
-## tidb-ctl deocder
+## tidb-ctl decoder
 
 deocde tidb key
 
