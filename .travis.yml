@@ -3,13 +3,13 @@ language: go
 go_import_path: github.com/pingcap/tidb-ctl
 
 go:
-  - 1.11.x
+  - 1.11.3
 
 # Run coverage tests.
 matrix:
   fast_finish: true
   allow_failures:
-    - go: 1.11.x
+    - go: 1.11.3
 
 before_install:  
   # create /logs/unit-test for unit test.
