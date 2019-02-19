@@ -5,6 +5,9 @@ ifeq "$(GOPATH)" ""
   $(error Please set the environment variable GOPATH before running `make`)
 endif
 
+GO       := GO111MODULE=on go
+GOBUILD  := CGO_ENABLED=0 $(GO) build
+
 PACKAGES  := $$(go list ./...)
 FILES     := $$(find . -name "*.go" | grep -vE "vendor")
 TOPDIRS   := $$(ls -d */ | grep -vE "vendor")
@@ -12,7 +15,7 @@ TOPDIRS   := $$(ls -d */ | grep -vE "vendor")
 .PHONY: default test check doc
 
 default:
-	go build
+	$(GOBUILD)
 
 check:
 	@echo "gofmt (simplify)"
@@ -23,11 +26,11 @@ check:
 	@ go tool vet -all -shadow $(TOPDIRS) 2>&1 | awk '{print} END{if(NR>0) {exit 1}}'
 
 	@echo "golint"
-	go get github.com/golang/lint/golint
+	GO111MODULE=off go get github.com/golang/lint/golint
 	@ golint -set_exit_status $(PACKAGES)
 
 	@echo "errcheck"
-	go get github.com/kisielk/errcheck
+	GO111MODULE=off go get github.com/kisielk/errcheck
 	@ errcheck -blank $(PACKAGES) | grep -v "_test\.go" | awk '{print} END{if(NR>0) {exit 1}}'
 
 test: check
