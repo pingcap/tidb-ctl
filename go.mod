@@ -6,6 +6,7 @@ require (
 	github.com/inconshreveable/mousetrap v1.0.0
 	github.com/juju/errors v0.0.0-20190207033735-e65537c515d7 // indirect
 	github.com/pingcap/tidb v2.0.11+incompatible
+	github.com/pkg/errors v0.8.1
 	github.com/remyoudompheng/bigfft v0.0.0-20170806203942-52369c62f446 // indirect
 	github.com/russross/blackfriday v0.0.0-20170728175326-4048872b16cc
 	github.com/sirupsen/logrus v1.3.0 // indirect
