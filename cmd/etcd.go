@@ -16,6 +16,7 @@ package cmd
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -113,7 +114,7 @@ func showDDLInfoCommandFunc(cmd *cobra.Command, args []string) {
 
 func delKeyCommandFunc(cmd *cobra.Command, args []string) {
 	if len(args) != 1 {
-		cmd.Println(cmd.UsageString())
+		fmt.Errorf("Only one argument!")
 		return
 	}
 
@@ -151,7 +152,7 @@ func delKeyCommandFunc(cmd *cobra.Command, args []string) {
 
 func putKeyCommandFunc(cmd *cobra.Command, args []string) {
 	if len(args) != 2 {
-		cmd.Println(cmd.UsageString())
+		fmt.Errorf("Only two arguments!")
 		return
 	}
 	var putParameter struct {
