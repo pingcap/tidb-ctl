@@ -10,18 +10,18 @@ func Test(t *testing.T) {
 	TestingT(t)
 }
 
-var _ = Suite(&EtcdCtl{})
+var _ = Suite(&Global{})
 
-type EtcdCtl struct{}
+type Global struct{}
 
-func (s *EtcdCtl) TestBase64Encode(c *C) {
+func (s *Global) TestBase64Encode(c *C) {
 	c.Parallel()
 	expected := "SGVsbG8sV29ybGQ="
 	obtained := base64Encode("Hello,World")
 	c.Assert(obtained, Equals, expected)
 }
 
-func (s *EtcdCtl) TestBase64Decode(c *C) {
+func (s *Global) TestBase64Decode(c *C) {
 	c.Parallel()
 	expected := "Hello,World"
 	obtained, err := base64Decode("SGVsbG8sV29ybGQ=")
