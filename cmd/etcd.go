@@ -16,6 +16,7 @@ package cmd
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -32,11 +33,9 @@ type parameter struct {
 }
 
 var (
-	dialClient             = &http.Client{}
-	rangeQueryPrefix       = "v3/kv/range"
-	rangeDelPrefix         = "v3/kv/deleterange"
-	delOwnerCampaignPrefix = "/tidb/ddl/fg/owner/"
-	delSchemaVersionPrefix = "/tidb/ddl/all_schema_bersions/DDL_ID/"
+	dialClient       = &http.Client{}
+	rangeQueryPrefix = "v3/kv/range"
+	rangeDelPrefix   = "v3/kv/deleterange"
 )
 
 // newEtcdCommand return a etcd subcommand of rootCmd
@@ -46,8 +45,7 @@ func newEtcdCommand() *cobra.Command {
 		Short: "control the info about etcd by grpc_gateway",
 	}
 	m.AddCommand(newShowDDLInfoCommand())
-	m.AddCommand(newDelOwnerCampaign())
-	m.AddCommand(newDelSchemaVersion())
+	m.AddCommand(newDelKeyCommand())
 	return m
 }
 
@@ -61,22 +59,12 @@ func newShowDDLInfoCommand() *cobra.Command {
 	return m
 }
 
-// newDelOwnerCampaign return a delete owner campaign subcommand of EtcdCommand
-func newDelOwnerCampaign() *cobra.Command {
+// newDelKeyCommand return a delete key subcommand of EtcdCommand
+func newDelKeyCommand() *cobra.Command {
 	m := &cobra.Command{
-		Use:   "delowner [LeaseID]",
-		Short: "delete DDL Owner Campaign by LeaseID",
-		Run:   delOwnerCampaign,
-	}
-	return m
-}
-
-// newDelSchemaVersion return a delete schema version subcommand of EtcdCommand
-func newDelSchemaVersion() *cobra.Command {
-	m := &cobra.Command{
-		Use:   "delschema",
-		Short: "delete schema version by DDLID",
-		Run:   delSchemaVersion,
+		Use:   "delkey",
+		Short: "del key by `del key [key]`",
+		Run:   delKeyCommandFunc,
 	}
 	return m
 }
@@ -113,19 +101,21 @@ func showDDLInfoCommandFunc(cmd *cobra.Command, args []string) {
 	cmd.Println(res)
 }
 
-func delOwnerCampaign(cmd *cobra.Command, args []string) {
+func delKeyCommandFunc(cmd *cobra.Command, args []string) {
 	if len(args) != 1 {
 		cmd.Println(cmd.UsageString())
 		return
 	}
 
-	leaseID := args[0]
+	key := args[0]
 
 	var para = &parameter{
-		Key: base64Encode(delOwnerCampaignPrefix + leaseID),
+		Key: base64Encode(key),
 	}
 
 	reqData, err := json.Marshal(para)
+
+	fmt.Printf("\n************\n\n%v\n\n*************\n", string(reqData))
 
 	if err != nil {
 		cmd.Printf("Failed to delete owner campaign : %v\n", err)
@@ -140,43 +130,6 @@ func delOwnerCampaign(cmd *cobra.Command, args []string) {
 	res, err := dail(req)
 	if err != nil {
 		cmd.Printf("Failed to delete owner campaign : %v\n", err)
-		return
-	}
-
-	res, err = formatJSON(res)
-	if err != nil {
-		cmd.Printf("Failed to delete schema version: %v\n", err)
-		return
-	}
-	cmd.Println(res)
-}
-
-func delSchemaVersion(cmd *cobra.Command, args []string) {
-	if len(args) != 1 {
-		cmd.Println(cmd.UsageString())
-		return
-	}
-
-	leaseID := args[0]
-
-	var para = &parameter{
-		Key: base64Encode(delSchemaVersionPrefix + leaseID),
-	}
-
-	reqData, err := json.Marshal(para)
-	if err != nil {
-		cmd.Printf("Failed to delete owner campaign : %v\n", err)
-		return
-	}
-	req, err := getRequest(cmd, rangeDelPrefix, http.MethodPost, "application/json",
-		bytes.NewBuffer(reqData))
-	if err != nil {
-		cmd.Printf("Failed to delete schema version: %v\n", err)
-		return
-	}
-	res, err := dail(req)
-	if err != nil {
-		cmd.Printf("Failed to delete schema version: %v\n", err)
 		return
 	}
 
@@ -193,6 +146,7 @@ func getRequest(cmd *cobra.Command, prefix string, method string, bodyType strin
 		method = http.MethodGet
 	}
 	url := "http://" + pdHost.String() + ":" + strconv.Itoa(int(pdPort)) + "/" + prefix
+	fmt.Printf("\n*****************\n\n%v\n\n**************\n", url)
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		return nil, err
