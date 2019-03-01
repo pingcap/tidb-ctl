@@ -36,6 +36,7 @@ var (
 	dialClient       = &http.Client{}
 	rangeQueryPrefix = "v3/kv/range"
 	rangeDelPrefix   = "v3/kv/deleterange"
+	putPrefix        = "v3/kv/put"
 )
 
 // newEtcdCommand return a etcd subcommand of rootCmd
@@ -46,6 +47,7 @@ func newEtcdCommand() *cobra.Command {
 	}
 	m.AddCommand(newShowDDLInfoCommand())
 	m.AddCommand(newDelKeyCommand())
+	m.AddCommand(newPutKeyCommand())
 	return m
 }
 
@@ -65,6 +67,15 @@ func newDelKeyCommand() *cobra.Command {
 		Use:   "delkey",
 		Short: "del key by `del key [key]`",
 		Run:   delKeyCommandFunc,
+	}
+	return m
+}
+
+func newPutKeyCommand() *cobra.Command {
+	m := &cobra.Command{
+		Use:   "putkey",
+		Short: "[ONLY FOR TEST!] put key in schema version by `putkey [key] [value]`",
+		Run:   putKeyCommandFunc,
 	}
 	return m
 }
@@ -133,6 +144,42 @@ func delKeyCommandFunc(cmd *cobra.Command, args []string) {
 		return
 	}
 
+	res, err = formatJSON(res)
+	if err != nil {
+		cmd.Printf("Failed to delete schema version: %v\n", err)
+		return
+	}
+	cmd.Println(res)
+}
+
+func putKeyCommandFunc(cmd *cobra.Command, args []string) {
+	if len(args) != 2 {
+		cmd.Println(cmd.UsageString())
+		return
+	}
+	var putParameter struct {
+		Key   string `json:"key"`
+		Value string `json:"value"`
+	}
+	putParameter.Key = base64Encode("/tidb/ddl/all_schema_versions/" + args[0])
+	putParameter.Value = base64Encode(args[1])
+
+	reqData, err := json.Marshal(putParameter)
+	if err != nil {
+		cmd.Printf("Failed to delete owner campaign : %v\n", err)
+		return
+	}
+	req, err := getRequest(cmd, putPrefix, http.MethodPost, "application/json",
+		bytes.NewBuffer(reqData))
+	if err != nil {
+		cmd.Printf("Failed to delete owner campaign : %v\n", err)
+		return
+	}
+	res, err := dail(req)
+	if err != nil {
+		cmd.Printf("Failed to delete owner campaign : %v\n", err)
+		return
+	}
 	res, err = formatJSON(res)
 	if err != nil {
 		cmd.Printf("Failed to delete schema version: %v\n", err)
