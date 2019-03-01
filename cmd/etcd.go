@@ -16,7 +16,6 @@ package cmd
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -126,8 +125,6 @@ func delKeyCommandFunc(cmd *cobra.Command, args []string) {
 
 	reqData, err := json.Marshal(para)
 
-	fmt.Printf("\n************\n\n%v\n\n*************\n", string(reqData))
-
 	if err != nil {
 		cmd.Printf("Failed to delete owner campaign : %v\n", err)
 		return
@@ -193,7 +190,6 @@ func getRequest(cmd *cobra.Command, prefix string, method string, bodyType strin
 		method = http.MethodGet
 	}
 	url := "http://" + pdHost.String() + ":" + strconv.Itoa(int(pdPort)) + "/" + prefix
-	fmt.Printf("\n*****************\n\n%v\n\n**************\n", url)
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		return nil, err
