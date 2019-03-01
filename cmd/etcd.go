@@ -15,7 +15,6 @@ package cmd
 
 import (
 	"bytes"
-	"encoding/base64"
 	"encoding/json"
 	"io"
 	"io/ioutil"
@@ -224,18 +223,6 @@ func dail(req *http.Request) (string, error) {
 func genResponseError(r *http.Response) error {
 	res, _ := ioutil.ReadAll(r.Body)
 	return errors.Errorf("[%d] %s", r.StatusCode, res)
-}
-
-func base64Encode(str string) string {
-	return base64.StdEncoding.EncodeToString([]byte(str))
-}
-
-func base64Decode(str string) (string, error) {
-	data, err := base64.StdEncoding.DecodeString(str)
-	if err != nil {
-		return "", err
-	}
-	return string(data), nil
 }
 
 func formatJSON(str string) (string, error) {

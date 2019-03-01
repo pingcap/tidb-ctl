@@ -15,9 +15,7 @@ package cmd
 
 import (
 	"bytes"
-	"encoding/base64"
 	"encoding/binary"
-	"encoding/hex"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -28,26 +26,26 @@ var (
 )
 
 // base64decodeCmd represents the base64decode command
-var base64decodeCmd = &cobra.Command{
+var newBase64decodeCmd = &cobra.Command{
 	Use:   "base64decode",
 	Short: "decode base64 value",
 	Long:  "decode base64 value to hex and uint64",
-	RunE:  base64decode,
+	RunE:  base64decodeCmd,
 }
 
-func base64decode(_ *cobra.Command, args []string) error {
-	if len(args) > 1 {
-		return fmt.Errorf("too many arguments")
+func base64decodeCmd(_ *cobra.Command, args []string) error {
+	if len(args) != 1 {
+		return fmt.Errorf("Only support one argument")
 	}
-	uDec, err := base64.StdEncoding.DecodeString(inputValue)
+	inputValue = args[0]
+	uDec, err := base64Decode(inputValue)
 	if err != nil {
 		return err
 	}
 	if len(uDec) <= 8 {
 		var num uint64
-		hexStr := hex.EncodeToString(uDec)
-		fmt.Printf("hex: %s\n", hexStr)
-		err = binary.Read(bytes.NewBuffer(uDec[0:8]), binary.BigEndian, &num)
+		fmt.Printf("hex: %s\n", uDec)
+		err = binary.Read(bytes.NewBuffer([]byte(uDec)[0:8]), binary.BigEndian, &num)
 		if err != nil {
 			return err
 		}
@@ -57,5 +55,5 @@ func base64decode(_ *cobra.Command, args []string) error {
 }
 
 func init() {
-	base64decodeCmd.Flags().StringVarP(&inputValue, "value", "v", "", "the value you want decode")
+	newBase64decodeCmd.Flags().StringVarP(&inputValue, "value", "v", "", "the value you want decode")
 }
