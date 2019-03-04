@@ -37,3 +37,9 @@ out/
 
 # Vscode files
 .vscode/**
+
+# other
+tags
+profile.coverprofile
+vendor
+tidb-ctl

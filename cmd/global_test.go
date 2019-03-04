@@ -1,27 +1,21 @@
 package cmd
 
 import (
-	"testing"
-
 	. "github.com/pingcap/check"
 )
 
-func Test(t *testing.T) {
-	TestingT(t)
-}
+var _ = Suite(&Global{})
 
-var _ = Suite(&EtcdCtl{})
+type Global struct{}
 
-type EtcdCtl struct{}
-
-func (s *EtcdCtl) TestBase64Encode(c *C) {
+func (s *Global) TestBase64Encode(c *C) {
 	c.Parallel()
 	expected := "SGVsbG8sV29ybGQ="
 	obtained := base64Encode("Hello,World")
 	c.Assert(obtained, Equals, expected)
 }
 
-func (s *EtcdCtl) TestBase64Decode(c *C) {
+func (s *Global) TestBase64Decode(c *C) {
 	c.Parallel()
 	expected := "Hello,World"
 	obtained, err := base64Decode("SGVsbG8sV29ybGQ=")

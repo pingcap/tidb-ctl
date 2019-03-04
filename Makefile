@@ -34,8 +34,8 @@ check:
 	@ errcheck -blank $(PACKAGES) | grep -v "_test\.go" | awk '{print} END{if(NR>0) {exit 1}}'
 
 test: check
-	@ log_level=debug go test -p 3 -cover $(PACKAGES)
+	@ log_level=debug $(GO) test -p 3 -cover $(PACKAGES)
 
 doc:
 	@mkdir -p doc
-	@ go run main.go --doc
+	@ $(GO) run main.go --doc
