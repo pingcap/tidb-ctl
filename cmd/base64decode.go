@@ -30,7 +30,7 @@ var newBase64decodeCmd = &cobra.Command{
 	RunE:  base64decodeCmd,
 }
 
-func base64decodeCmd(_ *cobra.Command, args []string) error {
+func base64decodeCmd(c *cobra.Command, args []string) error {
 	if len(args) != 1 {
 		return fmt.Errorf("Only support one argument!")
 	}
@@ -42,12 +42,12 @@ func base64decodeCmd(_ *cobra.Command, args []string) error {
 	if len(uDec) <= 8 {
 		var num uint64
 		hexStr := hex.EncodeToString([]byte(uDec))
-		fmt.Printf("hex: %s\n", hexStr)
+		c.Printf("hex: %s\n", hexStr)
 		err = binary.Read(bytes.NewBuffer([]byte(uDec)[0:8]), binary.BigEndian, &num)
 		if err != nil {
 			return err
 		}
-		fmt.Printf("uint64: %d\n", num)
+		c.Printf("uint64: %d\n", num)
 	}
 	return nil
 }
