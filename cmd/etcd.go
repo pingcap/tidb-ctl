@@ -21,6 +21,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -119,6 +120,11 @@ func delKeyCommandFunc(cmd *cobra.Command, args []string) {
 	}
 
 	key := args[0]
+
+	if !strings.HasPrefix(key, "/tidb/ddl/") {
+		fmt.Errorf("This function only for delete something about DDL")
+		return
+	}
 
 	var para = &parameter{
 		Key: base64Encode(key),
