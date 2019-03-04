@@ -16,7 +16,6 @@ package cmd
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -115,14 +114,14 @@ func showDDLInfoCommandFunc(cmd *cobra.Command, args []string) {
 
 func delKeyCommandFunc(cmd *cobra.Command, args []string) {
 	if len(args) != 1 {
-		fmt.Errorf("Only one argument!")
+		cmd.Printf("Only one argument!")
 		return
 	}
 
 	key := args[0]
 
 	if !strings.HasPrefix(key, "/tidb/ddl/") {
-		fmt.Errorf("This function only for delete something about DDL")
+		cmd.Printf("This function only for delete something about DDL")
 		return
 	}
 
@@ -131,26 +130,25 @@ func delKeyCommandFunc(cmd *cobra.Command, args []string) {
 	}
 
 	reqData, err := json.Marshal(para)
-
 	if err != nil {
-		cmd.Printf("Failed to delete owner campaign : %v\n", err)
+		cmd.Printf("Failed to delete key: %v\n", err)
 		return
 	}
 	req, err := getRequest(cmd, rangeDelPrefix, http.MethodPost, "application/json",
 		bytes.NewBuffer(reqData))
 	if err != nil {
-		cmd.Printf("Failed to delete owner campaign : %v\n", err)
+		cmd.Printf("Failed to delete key: %v\n", err)
 		return
 	}
 	res, err := dail(req)
 	if err != nil {
-		cmd.Printf("Failed to delete owner campaign : %v\n", err)
+		cmd.Printf("Failed to delete key: %v\n", err)
 		return
 	}
 
 	res, err = formatJSON(res)
 	if err != nil {
-		cmd.Printf("Failed to delete schema version: %v\n", err)
+		cmd.Printf("Failed to delete key: %v\n", err)
 		return
 	}
 	cmd.Println(res)
@@ -158,7 +156,7 @@ func delKeyCommandFunc(cmd *cobra.Command, args []string) {
 
 func putKeyCommandFunc(cmd *cobra.Command, args []string) {
 	if len(args) != 2 {
-		fmt.Errorf("Only two arguments!")
+		cmd.Printf("Only two arguments!")
 		return
 	}
 	var putParameter struct {
