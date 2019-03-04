@@ -71,6 +71,7 @@ func newDelKeyCommand() *cobra.Command {
 	return m
 }
 
+// newPutKeyCommand return a put key subcommand of EtcdCommand
 func newPutKeyCommand() *cobra.Command {
 	m := &cobra.Command{
 		Use:   "putkey",
