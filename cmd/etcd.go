@@ -168,23 +168,23 @@ func putKeyCommandFunc(cmd *cobra.Command, args []string) {
 
 	reqData, err := json.Marshal(putParameter)
 	if err != nil {
-		cmd.Printf("Failed to delete owner campaign : %v\n", err)
+		cmd.Printf("Failed to put key: %v\n", err)
 		return
 	}
 	req, err := getRequest(cmd, putPrefix, http.MethodPost, "application/json",
 		bytes.NewBuffer(reqData))
 	if err != nil {
-		cmd.Printf("Failed to delete owner campaign : %v\n", err)
+		cmd.Printf("Failed to put key: %v\n", err)
 		return
 	}
 	res, err := dail(req)
 	if err != nil {
-		cmd.Printf("Failed to delete owner campaign : %v\n", err)
+		cmd.Printf("Failed to put key: %v\n", err)
 		return
 	}
 	res, err = formatJSON(res)
 	if err != nil {
-		cmd.Printf("Failed to delete schema version: %v\n", err)
+		cmd.Printf("Failed to put key: %v\n", err)
 		return
 	}
 	cmd.Println(res)
