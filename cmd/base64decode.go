@@ -22,10 +22,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	inputValue string
-)
-
 // base64decodeCmd represents the base64decode command
 var newBase64decodeCmd = &cobra.Command{
 	Use:   "base64decode",
@@ -36,9 +32,9 @@ var newBase64decodeCmd = &cobra.Command{
 
 func base64decodeCmd(_ *cobra.Command, args []string) error {
 	if len(args) != 1 {
-		return fmt.Errorf("Only support one argument")
+		return fmt.Errorf("Only support one argument!")
 	}
-	inputValue = args[0]
+	inputValue := args[0]
 	uDec, err := base64Decode(inputValue)
 	if err != nil {
 		return err
@@ -54,8 +50,4 @@ func base64decodeCmd(_ *cobra.Command, args []string) error {
 		fmt.Printf("uint64: %d\n", num)
 	}
 	return nil
-}
-
-func init() {
-	newBase64decodeCmd.Flags().StringVarP(&inputValue, "value", "v", "", "the value you want decode")
 }

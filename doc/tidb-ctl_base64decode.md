@@ -14,8 +14,7 @@ tidb-ctl base64decode [flags]
 ### Options
 
 ```
-  -h, --help           help for base64decode
-  -v, --value string   the value you want decode
+  -h, --help   help for base64decode
 ```
 
 ### SEE ALSO
