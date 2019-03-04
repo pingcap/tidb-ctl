@@ -16,6 +16,7 @@ package cmd
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -44,7 +45,8 @@ func base64decodeCmd(_ *cobra.Command, args []string) error {
 	}
 	if len(uDec) <= 8 {
 		var num uint64
-		fmt.Printf("hex: %s\n", uDec)
+		hexStr := hex.EncodeToString([]byte(uDec))
+		fmt.Printf("hex: %s\n", hexStr)
 		err = binary.Read(bytes.NewBuffer([]byte(uDec)[0:8]), binary.BigEndian, &num)
 		if err != nil {
 			return err
