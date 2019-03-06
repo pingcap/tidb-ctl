@@ -39,7 +39,7 @@ var (
 	putPrefix        = "v3/kv/put"
 )
 
-// newEtcdCommand return a etcd subcommand of rootCmd
+// newEtcdCommand returns a etcd subcommand of rootCmd.
 func newEtcdCommand() *cobra.Command {
 	m := &cobra.Command{
 		Use:   "etcd",
@@ -51,7 +51,7 @@ func newEtcdCommand() *cobra.Command {
 	return m
 }
 
-// newShowDDLInfoCommand return a show ddl information subcommand of EtcdCommand
+// newShowDDLInfoCommand returns a show ddl information subcommand of EtcdCommand.
 func newShowDDLInfoCommand() *cobra.Command {
 	m := &cobra.Command{
 		Use:   "ddlinfo",
@@ -61,7 +61,7 @@ func newShowDDLInfoCommand() *cobra.Command {
 	return m
 }
 
-// newDelKeyCommand return a delete key subcommand of EtcdCommand
+// newDelKeyCommand returns a delete key subcommand of EtcdCommand.
 func newDelKeyCommand() *cobra.Command {
 	m := &cobra.Command{
 		Use:   "delkey",
@@ -71,7 +71,7 @@ func newDelKeyCommand() *cobra.Command {
 	return m
 }
 
-// newPutKeyCommand return a put key subcommand of EtcdCommand
+// newPutKeyCommand returns a put key subcommand of EtcdCommand.
 func newPutKeyCommand() *cobra.Command {
 	m := &cobra.Command{
 		Use:   "putkey",
@@ -82,9 +82,11 @@ func newPutKeyCommand() *cobra.Command {
 }
 
 func showDDLInfoCommandFunc(cmd *cobra.Command, args []string) {
+	st := "/tidb/ddl"
+	ed := "/tidb/ddm"
 	var rangeQueryDDLInfo = &parameter{
-		Key:      base64Encode("/tidb/ddl"),
-		RangeEnd: base64Encode("/tidb/ddm"),
+		Key:      base64Encode(st),
+		RangeEnd: base64Encode(ed),
 	}
 
 	reqData, err := json.Marshal(rangeQueryDDLInfo)
@@ -118,10 +120,9 @@ func delKeyCommandFunc(cmd *cobra.Command, args []string) {
 		cmd.Printf("Only one argument!")
 		return
 	}
-
+	apiScope := "/tidb/ddl"
 	key := args[0]
-
-	if !strings.HasPrefix(key, "/tidb/ddl/") {
+	if !strings.HasPrefix(key, apiScope) {
 		cmd.Printf("This function only for delete something about DDL")
 		return
 	}
