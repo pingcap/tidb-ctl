@@ -159,11 +159,6 @@ func delKeyCommandFunc(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	res, err = formatJSONAndBase64Decode(res)
-	if err != nil {
-		cmd.Printf("Failed to delete key: %v\n", err)
-		return
-	}
 	cmd.Println(res)
 }
 
@@ -196,11 +191,7 @@ func putKeyCommandFunc(cmd *cobra.Command, args []string) {
 		cmd.Printf("Failed to put key: %v\n", err)
 		return
 	}
-	res, err = formatJSONAndBase64Decode(res)
-	if err != nil {
-		cmd.Printf("Failed to put key: %v\n", err)
-		return
-	}
+
 	cmd.Println(res)
 }
 
