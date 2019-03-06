@@ -82,36 +82,11 @@ func newPutKeyCommand() *cobra.Command {
 }
 
 func showDDLInfoCommandFunc(cmd *cobra.Command, args []string) {
-	st := "/tidb/ddl"
-	ed := "/tidb/ddm"
-	var rangeQueryDDLInfo = &parameter{
-		Key:      base64Encode(st),
-		RangeEnd: base64Encode(ed),
-	}
-
-	reqData, err := json.Marshal(rangeQueryDDLInfo)
+	res, err := getDDLInfo()
 	if err != nil {
 		cmd.Printf("Failed to show DDLInfo: %v\n", err)
 		return
 	}
-	req, err := getRequest(cmd, rangeQueryPrefix, http.MethodPost, "application/json",
-		bytes.NewBuffer(reqData))
-	if err != nil {
-		cmd.Printf("Failed to show DDLInfo: %v\n", err)
-		return
-	}
-	res, err := dail(req)
-	if err != nil {
-		cmd.Printf("Failed to show DDLInfo: %v\n", err)
-		return
-	}
-
-	res, err = formatJSONAndBase64Decode(res)
-	if err != nil {
-		cmd.Printf("Failed to show DDLInfo: %v\n", err)
-		return
-	}
-
 	cmd.Println(res)
 }
 
@@ -129,6 +104,40 @@ func delKeyCommandFunc(cmd *cobra.Command, args []string) {
 		return
 	}
 
+	ddlInfo, err := getDDLInfo()
+	if err != nil {
+		cmd.Printf("Failed to delete key: %v\n", err)
+		return
+	}
+
+	findKey := false
+	var jsn struct {
+		Count  string              `json:"count"`
+		Header map[string]string   `json:"header"`
+		Kvs    []map[string]string `json:"kvs"`
+	}
+	err = json.Unmarshal([]byte(ddlInfo), &jsn)
+	if err != nil {
+		cmd.Printf("Failed to delete key: %v\n", err)
+		return
+	}
+	for _, v := range jsn.Kvs {
+		if findKey {
+			break
+		}
+		for kk, vv := range v {
+			if kk == "key" && vv == key {
+				findKey = true
+				break
+			}
+		}
+	}
+
+	if !findKey {
+		cmd.Printf("Failed to delete key: Key not found!")
+		return
+	}
+
 	var para = &parameter{
 		Key: base64Encode(key),
 	}
@@ -138,7 +147,7 @@ func delKeyCommandFunc(cmd *cobra.Command, args []string) {
 		cmd.Printf("Failed to delete key: %v\n", err)
 		return
 	}
-	req, err := getRequest(cmd, rangeDelPrefix, http.MethodPost, "application/json",
+	req, err := getRequest(rangeDelPrefix, http.MethodPost, "application/json",
 		bytes.NewBuffer(reqData))
 	if err != nil {
 		cmd.Printf("Failed to delete key: %v\n", err)
@@ -176,7 +185,7 @@ func putKeyCommandFunc(cmd *cobra.Command, args []string) {
 		cmd.Printf("Failed to put key: %v\n", err)
 		return
 	}
-	req, err := getRequest(cmd, putPrefix, http.MethodPost, "application/json",
+	req, err := getRequest(putPrefix, http.MethodPost, "application/json",
 		bytes.NewBuffer(reqData))
 	if err != nil {
 		cmd.Printf("Failed to put key: %v\n", err)
@@ -195,7 +204,36 @@ func putKeyCommandFunc(cmd *cobra.Command, args []string) {
 	cmd.Println(res)
 }
 
-func getRequest(cmd *cobra.Command, prefix string, method string, bodyType string, body io.Reader) (*http.Request, error) {
+func getDDLInfo() (string, error) {
+	st := "/tidb/ddl"
+	ed := "/tidb/ddm"
+	var rangeQueryDDLInfo = &parameter{
+		Key:      base64Encode(st),
+		RangeEnd: base64Encode(ed),
+	}
+
+	reqData, err := json.Marshal(rangeQueryDDLInfo)
+	if err != nil {
+		return "", err
+	}
+	req, err := getRequest(rangeQueryPrefix, http.MethodPost, "application/json",
+		bytes.NewBuffer(reqData))
+	if err != nil {
+		return "", err
+	}
+	res, err := dail(req)
+	if err != nil {
+		return "", err
+	}
+
+	res, err = formatJSONAndBase64Decode(res)
+	if err != nil {
+		return "", err
+	}
+	return res, nil
+}
+
+func getRequest(prefix string, method string, bodyType string, body io.Reader) (*http.Request, error) {
 	if method == "" {
 		method = http.MethodGet
 	}
@@ -241,6 +279,7 @@ func formatJSONAndBase64Decode(str string) (string, error) {
 
 	err := json.Unmarshal([]byte(str), &jsn)
 
+	// Base64Decode for key and value.
 	for k, v := range jsn.Kvs {
 		for kk, vv := range v {
 			if kk == "key" || kk == "value" {
