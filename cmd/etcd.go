@@ -65,7 +65,7 @@ func newShowDDLInfoCommand() *cobra.Command {
 func newDelKeyCommand() *cobra.Command {
 	m := &cobra.Command{
 		Use:   "delkey",
-		Short: "del key by `del key [key]`",
+		Short: "del key by `delkey [key]`",
 		Run:   delKeyCommandFunc,
 	}
 	return m
@@ -95,11 +95,11 @@ func delKeyCommandFunc(cmd *cobra.Command, args []string) {
 		cmd.Printf("Only one argument!")
 		return
 	}
-	var apiScope [2]string
-	apiScope[0] = "/tidb/ddl/fg/owner/"
-	apiScope[1] = "/tidb/ddl/all_schema_versions/"
+
 	key := args[0]
-	if !(strings.HasPrefix(key, apiScope[0]) || strings.HasPrefix(key, apiScope[1])) {
+	ddlOwnerKeyPrefix := "/tidb/ddl/fg/owner/"
+	ddlAllSchemaVersionsPrefix = "/tidb/ddl/all_schema_versions/"
+	if !(strings.HasPrefix(key, ddlOwnerKeyPrefix) || strings.HasPrefix(key, ddlAllSchemaVersionsPrefix)) {
 		cmd.Printf("This function only for delete something about DDL")
 		return
 	}
@@ -121,6 +121,7 @@ func delKeyCommandFunc(cmd *cobra.Command, args []string) {
 		cmd.Printf("Failed to delete key: %v\n", err)
 		return
 	}
+	// Check key exists
 	for _, v := range jsn.Kvs {
 		if findKey {
 			break
