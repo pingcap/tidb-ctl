@@ -98,7 +98,7 @@ func delKeyCommandFunc(cmd *cobra.Command, args []string) {
 
 	key := args[0]
 	ddlOwnerKeyPrefix := "/tidb/ddl/fg/owner/"
-	ddlAllSchemaVersionsPrefix = "/tidb/ddl/all_schema_versions/"
+	ddlAllSchemaVersionsPrefix := "/tidb/ddl/all_schema_versions/"
 	if !(strings.HasPrefix(key, ddlOwnerKeyPrefix) || strings.HasPrefix(key, ddlAllSchemaVersionsPrefix)) {
 		cmd.Printf("This function only for delete something about DDL")
 		return
