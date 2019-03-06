@@ -120,9 +120,11 @@ func delKeyCommandFunc(cmd *cobra.Command, args []string) {
 		cmd.Printf("Only one argument!")
 		return
 	}
-	apiScope := "/tidb/ddl"
+	var apiScope [2]string
+	apiScope[0] = "/tidb/ddl/fg/owner/"
+	apiScope[1] = "/tidb/ddl/all_schema_versions/"
 	key := args[0]
-	if !strings.HasPrefix(key, apiScope) {
+	if !(strings.HasPrefix(key, apiScope[0]) || strings.HasPrefix(key, apiScope[1])) {
 		cmd.Printf("This function only for delete something about DDL")
 		return
 	}
