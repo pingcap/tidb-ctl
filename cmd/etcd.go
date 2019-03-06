@@ -106,7 +106,7 @@ func showDDLInfoCommandFunc(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	res, err = formatJSON(res)
+	res, err = formatJSONAndBase64Decode(res)
 	if err != nil {
 		cmd.Printf("Failed to show DDLInfo: %v\n", err)
 		return
@@ -148,7 +148,7 @@ func delKeyCommandFunc(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	res, err = formatJSON(res)
+	res, err = formatJSONAndBase64Decode(res)
 	if err != nil {
 		cmd.Printf("Failed to delete key: %v\n", err)
 		return
@@ -165,7 +165,8 @@ func putKeyCommandFunc(cmd *cobra.Command, args []string) {
 		Key   string `json:"key"`
 		Value string `json:"value"`
 	}
-	putParameter.Key = base64Encode("/tidb/ddl/all_schema_versions/" + args[0])
+	putKeyPreFix := "/tidb/ddl/all_schema_versions/"
+	putParameter.Key = base64Encode(putKeyPreFix + args[0])
 	putParameter.Value = base64Encode(args[1])
 
 	reqData, err := json.Marshal(putParameter)
@@ -184,7 +185,7 @@ func putKeyCommandFunc(cmd *cobra.Command, args []string) {
 		cmd.Printf("Failed to put key: %v\n", err)
 		return
 	}
-	res, err = formatJSON(res)
+	res, err = formatJSONAndBase64Decode(res)
 	if err != nil {
 		cmd.Printf("Failed to put key: %v\n", err)
 		return
@@ -229,7 +230,7 @@ func genResponseError(r *http.Response) error {
 	return errors.Errorf("[%d] %s", r.StatusCode, res)
 }
 
-func formatJSON(str string) (string, error) {
+func formatJSONAndBase64Decode(str string) (string, error) {
 	var jsn struct {
 		Count  string              `json:"count"`
 		Header map[string]string   `json:"header"`
