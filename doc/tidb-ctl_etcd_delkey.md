@@ -1,20 +1,20 @@
-## tidb-ctl etcd ddlinfo
+## tidb-ctl etcd delkey
 
-Show All Information about DDL
+del key by `delkey [key]`
 
 ### Synopsis
 
 
-Show All Information about DDL
+del key by `delkey [key]`
 
 ```
-tidb-ctl etcd ddlinfo [flags]
+tidb-ctl etcd delkey [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for ddlinfo
+  -h, --help   help for delkey
 ```
 
 ### SEE ALSO
