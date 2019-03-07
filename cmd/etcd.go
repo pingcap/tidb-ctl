@@ -33,10 +33,11 @@ type parameter struct {
 }
 
 var (
-	dialClient       = &http.Client{}
-	rangeQueryPrefix = "v3/kv/range"
-	rangeDelPrefix   = "v3/kv/deleterange"
-	putPrefix        = "v3/kv/put"
+	dialClient                 = &http.Client{}
+	rangeQueryPrefix           = "v3/kv/range"
+	rangeDelPrefix             = "v3/kv/deleterange"
+	putPrefix                  = "v3/kv/put"
+	ddlAllSchemaVersionsPrefix = "/tidb/ddl/all_schema_versions/"
 )
 
 // newEtcdCommand returns a etcd subcommand of rootCmd.
@@ -92,53 +93,16 @@ func showDDLInfoCommandFunc(cmd *cobra.Command, args []string) {
 
 func delKeyCommandFunc(cmd *cobra.Command, args []string) {
 	if len(args) != 1 {
-		cmd.Printf("Only one argument!")
+		cmd.Println("Only one argument!")
 		return
 	}
 
 	key := args[0]
 	ddlOwnerKeyPrefix := "/tidb/ddl/fg/owner/"
-	ddlAllSchemaVersionsPrefix := "/tidb/ddl/all_schema_versions/"
 	if !(strings.HasPrefix(key, ddlOwnerKeyPrefix) || strings.HasPrefix(key, ddlAllSchemaVersionsPrefix)) {
-		cmd.Printf("This function only for delete something about DDL")
+		cmd.Println("This function only for delete something about DDL")
 		return
 	}
-
-	ddlInfo, err := getDDLInfo()
-	if err != nil {
-		cmd.Printf("Failed to delete key: %v\n", err)
-		return
-	}
-
-	findKey := false
-	var jsn struct {
-		Count  string              `json:"count"`
-		Header map[string]string   `json:"header"`
-		Kvs    []map[string]string `json:"kvs"`
-	}
-	err = json.Unmarshal([]byte(ddlInfo), &jsn)
-	if err != nil {
-		cmd.Printf("Failed to delete key: %v\n", err)
-		return
-	}
-	// Check key exists
-	for _, v := range jsn.Kvs {
-		if findKey {
-			break
-		}
-		for kk, vv := range v {
-			if kk == "key" && vv == key {
-				findKey = true
-				break
-			}
-		}
-	}
-
-	if !findKey {
-		cmd.Printf("Failed to delete key: Key not found!")
-		return
-	}
-
 	var para = &parameter{
 		Key: base64Encode(key),
 	}
@@ -165,15 +129,14 @@ func delKeyCommandFunc(cmd *cobra.Command, args []string) {
 
 func putKeyCommandFunc(cmd *cobra.Command, args []string) {
 	if len(args) != 2 {
-		cmd.Printf("Only two arguments!")
+		cmd.Println("Only two arguments!")
 		return
 	}
 	var putParameter struct {
 		Key   string `json:"key"`
 		Value string `json:"value"`
 	}
-	putKeyPreFix := "/tidb/ddl/all_schema_versions/"
-	putParameter.Key = base64Encode(putKeyPreFix + args[0])
+	putParameter.Key = base64Encode(ddlAllSchemaVersionsPrefix + args[0])
 	putParameter.Value = base64Encode(args[1])
 
 	reqData, err := json.Marshal(putParameter)
