@@ -1,7 +1,6 @@
 // Copyright 2019 PingCAP, Inc.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
+// Licensed under the Apache License, Version 2.0 (the "License"); // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
 //     http://www.apache.org/licenses/LICENSE-2.0
@@ -34,9 +33,9 @@ type parameter struct {
 
 var (
 	dialClient                 = &http.Client{}
-	rangeQueryPrefix           = "v3/kv/range"
-	rangeDelPrefix             = "v3/kv/deleterange"
-	putPrefix                  = "v3/kv/put"
+	rangeQueryPrefix           = "/v3/kv/range"
+	rangeDelPrefix             = "/v3/kv/deleterange"
+	putPrefix                  = "/v3/kv/put"
 	ddlAllSchemaVersionsPrefix = "/tidb/ddl/all_schema_versions/"
 )
 
@@ -192,7 +191,7 @@ func getRequest(prefix string, method string, bodyType string, body io.Reader) (
 	if method == "" {
 		method = http.MethodGet
 	}
-	url := "http://" + pdHost.String() + ":" + strconv.Itoa(int(pdPort)) + "/" + prefix
+	url := "http://" + pdHost.String() + ":" + strconv.Itoa(int(pdPort)) + prefix
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		return nil, err
