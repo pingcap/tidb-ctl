@@ -31,8 +31,8 @@ type etcdTestSuite struct{}
 func (s *etcdTestSuite) TestDDLInfo(c *C) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		c.Assert(r.Method, Equals, "POST")
-		c.Assert(r.URL.EscapedPath(), Equals, "/v3/kv/range")
+		c.Assert(r.Method, Equals, http.MethodPost)
+		c.Assert(r.URL.EscapedPath(), Equals, rangeQueryPrefix)
 		result, err := ioutil.ReadAll(r.Body)
 		c.Assert(err, IsNil)
 		var resp parameter
@@ -55,8 +55,8 @@ func (s *etcdTestSuite) TestDelKey(c *C) {
 	testKey := "test"
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		c.Assert(r.Method, Equals, "POST")
-		c.Assert(r.URL.EscapedPath(), Equals, "/v3/kv/deleterange")
+		c.Assert(r.Method, Equals, http.MethodPost)
+		c.Assert(r.URL.EscapedPath(), Equals, rangeDelPrefix)
 		result, err := ioutil.ReadAll(r.Body)
 		c.Assert(err, IsNil)
 		var resp parameter
@@ -73,7 +73,7 @@ func (s *etcdTestSuite) TestDelKey(c *C) {
 	args := []string{"etcd", "delkey", testKey, "-i", uArr[0], "-p", uArr[1]}
 	_, output, err := executeCommandC(cmd, args...)
 	c.Assert(err, IsNil)
-	c.Assert(string(output), Equals, "This function only for delete something about DDL")
+	c.Assert(string(output), Equals, "This function only for delete something about DDL\n")
 
 	testKey = "/tidb/ddl/12345"
 	args = []string{"etcd", "delkey", testKey, "-i", uArr[0], "-p", uArr[1]}
@@ -87,8 +87,8 @@ func (s *etcdTestSuite) TestPutKey(c *C) {
 	testValue := "test"
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		c.Assert(r.Method, Equals, "POST")
-		c.Assert(r.URL.EscapedPath(), Equals, "/v3/kv/put")
+		c.Assert(r.Method, Equals, http.MethodPost)
+		c.Assert(r.URL.EscapedPath(), Equals, putPrefix)
 		result, err := ioutil.ReadAll(r.Body)
 		c.Assert(err, IsNil)
 		var resp struct {
@@ -97,7 +97,7 @@ func (s *etcdTestSuite) TestPutKey(c *C) {
 		}
 		err = json.Unmarshal(result, &resp)
 		c.Assert(err, IsNil)
-		c.Assert(resp.Key, Equals, base64Encode("/tidb/ddl/all_schema_versions/"+testKey))
+		c.Assert(resp.Key, Equals, base64Encode(ddlAllSchemaVersionsPrefix+testKey))
 		c.Assert(resp.Value, Equals, base64Encode(testValue))
 	}))
 	defer ts.Close()
