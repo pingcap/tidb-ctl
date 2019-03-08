@@ -103,6 +103,10 @@ func delKeyCommandFunc(cmd *cobra.Command, args []string) {
 		cmd.Println("This function only for delete the key-value about DDL")
 		return
 	}
+	if ddlOwnerKeyPrefix == key || ddlAllSchemaVersionsPrefix == key {
+		cmd.Println("Please input the key wanted to delete.")
+		return
+	}
 	var para = &parameter{
 		Key: base64Encode(key),
 	}
@@ -132,6 +136,11 @@ func putKeyCommandFunc(cmd *cobra.Command, args []string) {
 		cmd.Println("Only two arguments!")
 		return
 	}
+	if !(len(args[0]) > 0) {
+		cmd.Println("Please input the key wanted to put")
+		return
+	}
+
 	var putParameter struct {
 		Key   string `json:"key"`
 		Value string `json:"value"`
