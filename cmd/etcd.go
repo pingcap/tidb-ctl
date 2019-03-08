@@ -66,7 +66,7 @@ func newShowDDLInfoCommand() *cobra.Command {
 func newDelKeyCommand() *cobra.Command {
 	m := &cobra.Command{
 		Use:   "delkey",
-		Short: "del key by `delkey [key]`",
+		Short: "Delete the key associated with DDL by `delkey [key]`",
 		Run:   delKeyCommandFunc,
 	}
 	return m
