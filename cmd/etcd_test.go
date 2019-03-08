@@ -73,7 +73,7 @@ func (s *etcdTestSuite) TestDelKey(c *C) {
 	args := []string{"etcd", "delkey", testKey, "-i", uArr[0], "-p", uArr[1]}
 	_, output, err := executeCommandC(cmd, args...)
 	c.Assert(err, IsNil)
-	c.Assert(string(output), Equals, "This function only for delete something about DDL\n")
+	c.Assert(string(output), Equals, "This function only for delete the key-value about DDL\n")
 
 	testKey = "/tidb/ddl/12345"
 	args = []string{"etcd", "delkey", testKey, "-i", uArr[0], "-p", uArr[1]}
