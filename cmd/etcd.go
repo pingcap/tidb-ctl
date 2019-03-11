@@ -20,6 +20,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -32,26 +33,26 @@ type parameter struct {
 }
 
 var (
-	dialClient             = &http.Client{}
-	rangeQueryPrefix       = "v3/kv/range"
-	rangeDelPrefix         = "v3/kv/deleterange"
-	delOwnerCampaignPrefix = "/tidb/ddl/fg/owner/"
-	delSchemaVersionPrefix = "/tidb/ddl/all_schema_bersions/DDL_ID/"
+	dialClient                 = &http.Client{}
+	rangeQueryPrefix           = "/v3/kv/range"
+	rangeDelPrefix             = "/v3/kv/deleterange"
+	putPrefix                  = "/v3/kv/put"
+	ddlAllSchemaVersionsPrefix = "/tidb/ddl/all_schema_versions/"
 )
 
-// newEtcdCommand return a etcd subcommand of rootCmd
+// newEtcdCommand returns a etcd subcommand of rootCmd.
 func newEtcdCommand() *cobra.Command {
 	m := &cobra.Command{
 		Use:   "etcd",
 		Short: "control the info about etcd by grpc_gateway",
 	}
 	m.AddCommand(newShowDDLInfoCommand())
-	m.AddCommand(newDelOwnerCampaign())
-	m.AddCommand(newDelSchemaVersion())
+	m.AddCommand(newDelKeyCommand())
+	m.AddCommand(newPutKeyCommand())
 	return m
 }
 
-// newShowDDLInfoCommand return a show ddl information subcommand of EtcdCommand
+// newShowDDLInfoCommand returns a show ddl information subcommand of EtcdCommand.
 func newShowDDLInfoCommand() *cobra.Command {
 	m := &cobra.Command{
 		Use:   "ddlinfo",
@@ -61,138 +62,146 @@ func newShowDDLInfoCommand() *cobra.Command {
 	return m
 }
 
-// newDelOwnerCampaign return a delete owner campaign subcommand of EtcdCommand
-func newDelOwnerCampaign() *cobra.Command {
+// newDelKeyCommand returns a delete key subcommand of EtcdCommand.
+func newDelKeyCommand() *cobra.Command {
 	m := &cobra.Command{
-		Use:   "delowner [LeaseID]",
-		Short: "delete DDL Owner Campaign by LeaseID",
-		Run:   delOwnerCampaign,
+		Use:   "delkey",
+		Short: "Delete the key associated with DDL by `delkey [key]`",
+		Run:   delKeyCommandFunc,
 	}
 	return m
 }
 
-// newDelSchemaVersion return a delete schema version subcommand of EtcdCommand
-func newDelSchemaVersion() *cobra.Command {
+// newPutKeyCommand returns a put key subcommand of EtcdCommand.
+func newPutKeyCommand() *cobra.Command {
 	m := &cobra.Command{
-		Use:   "delschema",
-		Short: "delete schema version by DDLID",
-		Run:   delSchemaVersion,
+		Use:   "putkey",
+		Short: "[ONLY FOR TEST!] put a key in the path of TiDB schema versions by `putkey [key] [value]`",
+		Run:   putKeyCommandFunc,
 	}
 	return m
 }
 
 func showDDLInfoCommandFunc(cmd *cobra.Command, args []string) {
+	res, err := getDDLInfo()
+	if err != nil {
+		cmd.Printf("Failed to show DDLInfo: %v\n", err)
+		return
+	}
+	cmd.Println(res)
+}
+
+func delKeyCommandFunc(cmd *cobra.Command, args []string) {
+	if len(args) != 1 {
+		cmd.Println("Only one argument!")
+		return
+	}
+
+	key := args[0]
+	ddlOwnerKeyPrefix := "/tidb/ddl/fg/owner/"
+	if !(strings.HasPrefix(key, ddlOwnerKeyPrefix) || strings.HasPrefix(key, ddlAllSchemaVersionsPrefix)) {
+		cmd.Println("This function only for delete the key-value about DDL")
+		return
+	}
+	if ddlOwnerKeyPrefix == key || ddlAllSchemaVersionsPrefix == key {
+		cmd.Println("Please input the key wanted to delete.")
+		return
+	}
+	var para = &parameter{
+		Key: base64Encode(key),
+	}
+
+	reqData, err := json.Marshal(para)
+	if err != nil {
+		cmd.Printf("Failed to delete key: %v\n", err)
+		return
+	}
+	req, err := getRequest(rangeDelPrefix, http.MethodPost, "application/json",
+		bytes.NewBuffer(reqData))
+	if err != nil {
+		cmd.Printf("Failed to delete key: %v\n", err)
+		return
+	}
+	res, err := dail(req)
+	if err != nil {
+		cmd.Printf("Failed to delete key: %v\n", err)
+		return
+	}
+
+	cmd.Println(res)
+}
+
+func putKeyCommandFunc(cmd *cobra.Command, args []string) {
+	if len(args) != 2 {
+		cmd.Println("Only two arguments!")
+		return
+	}
+	if !(len(args[0]) > 0) {
+		cmd.Println("Please input the key wanted to put")
+		return
+	}
+
+	var putParameter struct {
+		Key   string `json:"key"`
+		Value string `json:"value"`
+	}
+	putParameter.Key = base64Encode(ddlAllSchemaVersionsPrefix + args[0])
+	putParameter.Value = base64Encode(args[1])
+
+	reqData, err := json.Marshal(putParameter)
+	if err != nil {
+		cmd.Printf("Failed to put key: %v\n", err)
+		return
+	}
+	req, err := getRequest(putPrefix, http.MethodPost, "application/json",
+		bytes.NewBuffer(reqData))
+	if err != nil {
+		cmd.Printf("Failed to put key: %v\n", err)
+		return
+	}
+	res, err := dail(req)
+	if err != nil {
+		cmd.Printf("Failed to put key: %v\n", err)
+		return
+	}
+
+	cmd.Println(res)
+}
+
+func getDDLInfo() (string, error) {
+	st := "/tidb/ddl"
+	ed := "/tidb/ddm"
 	var rangeQueryDDLInfo = &parameter{
-		Key:      base64Encode("/tidb/ddl"),
-		RangeEnd: base64Encode("/tidb/ddm"),
+		Key:      base64Encode(st),
+		RangeEnd: base64Encode(ed),
 	}
 
 	reqData, err := json.Marshal(rangeQueryDDLInfo)
 	if err != nil {
-		cmd.Printf("Failed to show DDLInfo: %v\n", err)
-		return
+		return "", err
 	}
-	req, err := getRequest(cmd, rangeQueryPrefix, http.MethodPost, "application/json",
+	req, err := getRequest(rangeQueryPrefix, http.MethodPost, "application/json",
 		bytes.NewBuffer(reqData))
 	if err != nil {
-		cmd.Printf("Failed to show DDLInfo: %v\n", err)
-		return
+		return "", err
 	}
 	res, err := dail(req)
 	if err != nil {
-		cmd.Printf("Failed to show DDLInfo: %v\n", err)
-		return
+		return "", err
 	}
 
-	res, err = formatJSON(res)
+	res, err = formatJSONAndBase64Decode(res)
 	if err != nil {
-		cmd.Printf("Failed to show DDLInfo: %v\n", err)
-		return
+		return "", err
 	}
-
-	cmd.Println(res)
+	return res, nil
 }
 
-func delOwnerCampaign(cmd *cobra.Command, args []string) {
-	if len(args) != 1 {
-		cmd.Println(cmd.UsageString())
-		return
-	}
-
-	leaseID := args[0]
-
-	var para = &parameter{
-		Key: base64Encode(delOwnerCampaignPrefix + leaseID),
-	}
-
-	reqData, err := json.Marshal(para)
-
-	if err != nil {
-		cmd.Printf("Failed to delete owner campaign : %v\n", err)
-		return
-	}
-	req, err := getRequest(cmd, rangeDelPrefix, http.MethodPost, "application/json",
-		bytes.NewBuffer(reqData))
-	if err != nil {
-		cmd.Printf("Failed to delete owner campaign : %v\n", err)
-		return
-	}
-	res, err := dail(req)
-	if err != nil {
-		cmd.Printf("Failed to delete owner campaign : %v\n", err)
-		return
-	}
-
-	res, err = formatJSON(res)
-	if err != nil {
-		cmd.Printf("Failed to delete schema version: %v\n", err)
-		return
-	}
-	cmd.Println(res)
-}
-
-func delSchemaVersion(cmd *cobra.Command, args []string) {
-	if len(args) != 1 {
-		cmd.Println(cmd.UsageString())
-		return
-	}
-
-	leaseID := args[0]
-
-	var para = &parameter{
-		Key: base64Encode(delSchemaVersionPrefix + leaseID),
-	}
-
-	reqData, err := json.Marshal(para)
-	if err != nil {
-		cmd.Printf("Failed to delete owner campaign : %v\n", err)
-		return
-	}
-	req, err := getRequest(cmd, rangeDelPrefix, http.MethodPost, "application/json",
-		bytes.NewBuffer(reqData))
-	if err != nil {
-		cmd.Printf("Failed to delete schema version: %v\n", err)
-		return
-	}
-	res, err := dail(req)
-	if err != nil {
-		cmd.Printf("Failed to delete schema version: %v\n", err)
-		return
-	}
-
-	res, err = formatJSON(res)
-	if err != nil {
-		cmd.Printf("Failed to delete schema version: %v\n", err)
-		return
-	}
-	cmd.Println(res)
-}
-
-func getRequest(cmd *cobra.Command, prefix string, method string, bodyType string, body io.Reader) (*http.Request, error) {
+func getRequest(prefix string, method string, bodyType string, body io.Reader) (*http.Request, error) {
 	if method == "" {
 		method = http.MethodGet
 	}
-	url := "http://" + pdHost.String() + ":" + strconv.Itoa(int(pdPort)) + "/" + prefix
+	url := "http://" + pdHost.String() + ":" + strconv.Itoa(int(pdPort)) + prefix
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		return nil, err
@@ -225,7 +234,7 @@ func genResponseError(r *http.Response) error {
 	return errors.Errorf("[%d] %s", r.StatusCode, res)
 }
 
-func formatJSON(str string) (string, error) {
+func formatJSONAndBase64Decode(str string) (string, error) {
 	var jsn struct {
 		Count  string              `json:"count"`
 		Header map[string]string   `json:"header"`
@@ -234,6 +243,7 @@ func formatJSON(str string) (string, error) {
 
 	err := json.Unmarshal([]byte(str), &jsn)
 
+	// Base64Decode for key and value.
 	for k, v := range jsn.Kvs {
 		for kk, vv := range v {
 			if kk == "key" || kk == "value" {
