@@ -32,6 +32,7 @@ require (
 	github.com/onsi/gomega v1.4.3 // indirect
 	github.com/opentracing/opentracing-go v1.0.2 // indirect
 	github.com/pingcap/check v0.0.0-20190102082844-67f458068fc8
+	github.com/pingcap/errors v0.11.0
 	github.com/pingcap/goleveldb v0.0.0-20171020122428-b9ff6c35079e // indirect
 	github.com/pingcap/kvproto v0.0.0-20190227013052-e71ca0165a5f // indirect
 	github.com/pingcap/tidb v2.0.11+incompatible
