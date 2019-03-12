@@ -139,7 +139,7 @@ func delKeyCommandFunc(cmd *cobra.Command, args []string) {
 			var ddlAllSchemaVersionKey string
 			for _, v := range jsn.Kvs {
 				if v["key"] == ddlOwnerKey {
-					ddlAllSchemaVersionKey = v["value"]
+					ddlAllSchemaVersionKey = ddlAllSchemaVersionsPrefix + v["value"]
 					break
 				}
 			}
@@ -148,10 +148,12 @@ func delKeyCommandFunc(cmd *cobra.Command, args []string) {
 				cmd.Println(err)
 				return
 			}
-			res, err = delKey(ddlAllSchemaVersionKey)
-			if err != nil {
-				cmd.Println(err)
-				return
+			if ddlAllSchemaVersionKey != "" {
+				res, err = delKey(ddlAllSchemaVersionKey)
+				if err != nil {
+					cmd.Println(err)
+					return
+				}
 			}
 
 		} else if strings.HasPrefix(key, ddlAllSchemaVersionsPrefix) {
@@ -159,19 +161,21 @@ func delKeyCommandFunc(cmd *cobra.Command, args []string) {
 			var ddlOwnerKey string
 			for _, v := range jsn.Kvs {
 				if v["key"] == ddlAllSchemaVersionKey {
-					ddlOwnerKey = v["value"]
+					ddlOwnerKey = ddlOwnerKeyPrefix + v["value"]
 					break
 				}
-			}
-			res, err = delKey(ddlOwnerKey)
-			if err != nil {
-				cmd.Println(err)
-				return
 			}
 			res, err = delKey(ddlAllSchemaVersionKey)
 			if err != nil {
 				cmd.Println(err)
 				return
+			}
+			if ddlOwnerKey != "" {
+				res, err = delKey(ddlOwnerKey)
+				if err != nil {
+					cmd.Println(err)
+					return
+				}
 			}
 		}
 	}
