@@ -63,6 +63,7 @@ func newEtcdCommand() *cobra.Command {
 	m.AddCommand(newShowDDLInfoCommand())
 	m.AddCommand(newDelKeyCommand())
 	m.AddCommand(newPutKeyCommand())
+	m.AddCommand(newEvictOwnerCommand())
 	return m
 }
 
@@ -83,7 +84,6 @@ func newDelKeyCommand() *cobra.Command {
 		Short: "Delete the key associated with DDL by `delkey [key]`",
 		Run:   delKeyCommandFunc,
 	}
-	m.Flags().BoolVarP(&delAllFlag, delAllFlagName, "a", false, "delete all about input key.")
 	return m
 }
 
@@ -97,10 +97,20 @@ func newPutKeyCommand() *cobra.Command {
 	return m
 }
 
+// newEvictOwnerCommand returns a evict owner subcommand of EtcdCommand.
+func newEvictOwnerCommand() *cobra.Command {
+	m := &cobra.Command{
+		Use:   "evictowner",
+		Short: "[DANGEROUS] evict the owner.",
+		Run:   evictOwnerCommandFunc,
+	}
+	return m
+}
+
 func showDDLInfoCommandFunc(cmd *cobra.Command, args []string) {
 	res, err := getDDLInfo()
 	if err != nil {
-		cmd.Printf("Failed to show DDLInfo: %v\n", err)
+		cmd.Println(errors.Wrap(err, "Failed to show DDLInfo"))
 		return
 	}
 	cmd.Println(res)
@@ -112,73 +122,15 @@ func delKeyCommandFunc(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	var res string
-	var err error
 	key := args[0]
-	if delAllFlag == false {
-		res, err = delKey(key)
-		if err != nil {
-			cmd.Println(err)
-			return
-		}
-		cmd.Println(res)
-	} else {
-		var jsn ddlInfoResponse
-		ddlInfo, err := getDDLInfo()
-		if err != nil {
-			cmd.Println(errors.Wrap(err, "Failed to delete key."))
-			return
-		}
-		err = json.Unmarshal([]byte(ddlInfo), &jsn)
-		if err != nil {
-			cmd.Println(errors.Wrap(err, "Failed to delete key."))
-			return
-		}
-		if strings.HasPrefix(key, ddlOwnerKeyPrefix) {
-			ddlOwnerKey := key
-			var ddlAllSchemaVersionKey string
-			for _, v := range jsn.Kvs {
-				if v["key"] == ddlOwnerKey {
-					ddlAllSchemaVersionKey = ddlAllSchemaVersionsPrefix + v["value"]
-					break
-				}
-			}
-			res, err = delKey(ddlOwnerKey)
-			if err != nil {
-				cmd.Println(err)
-				return
-			}
-			if ddlAllSchemaVersionKey != "" {
-				res, err = delKey(ddlAllSchemaVersionKey)
-				if err != nil {
-					cmd.Println(err)
-					return
-				}
-			}
 
-		} else if strings.HasPrefix(key, ddlAllSchemaVersionsPrefix) {
-			ddlAllSchemaVersionKey := key
-			var ddlOwnerKey string
-			for _, v := range jsn.Kvs {
-				if v["key"] == ddlAllSchemaVersionKey {
-					ddlOwnerKey = ddlOwnerKeyPrefix + v["value"]
-					break
-				}
-			}
-			res, err = delKey(ddlAllSchemaVersionKey)
-			if err != nil {
-				cmd.Println(err)
-				return
-			}
-			if ddlOwnerKey != "" {
-				res, err = delKey(ddlOwnerKey)
-				if err != nil {
-					cmd.Println(err)
-					return
-				}
-			}
-		}
+	res, err := delKey(key)
+	if err != nil {
+		cmd.Println(err)
+		return
 	}
+
+	cmd.Println(res)
 }
 
 func putKeyCommandFunc(cmd *cobra.Command, args []string) {
@@ -187,7 +139,7 @@ func putKeyCommandFunc(cmd *cobra.Command, args []string) {
 		return
 	}
 	if !(len(args[0]) > 0) {
-		cmd.Println("Please input the key wanted to put")
+		cmd.Println(errors.New("Please input the key wanted to put"))
 		return
 	}
 
@@ -200,22 +152,63 @@ func putKeyCommandFunc(cmd *cobra.Command, args []string) {
 
 	reqData, err := json.Marshal(putParameter)
 	if err != nil {
-		cmd.Printf("Failed to put key: %v\n", err)
+		cmd.Println(errors.Wrap(err, "Failed to put key"))
 		return
 	}
 	req, err := getRequest(putPrefix, http.MethodPost, "application/json",
 		bytes.NewBuffer(reqData))
 	if err != nil {
-		cmd.Printf("Failed to put key: %v\n", err)
+		cmd.Println(errors.Wrap(err, "Failed to put key"))
 		return
 	}
 	res, err := dail(req)
 	if err != nil {
-		cmd.Printf("Failed to put key: %v\n", err)
+		cmd.Println(errors.Wrap(err, "Failed to put key"))
 		return
 	}
 
 	cmd.Println(res)
+}
+
+func evictOwnerCommandFunc(cmd *cobra.Command, args []string) {
+	cmd.Println("[DANGEROUS] Are you sure to evict the owner?yes/no.")
+	confirm, err := askForConfirmation()
+	if !confirm {
+		return
+	}
+	if err != nil {
+		cmd.Println(errors.Wrap(err, "Failed to evict"))
+	}
+
+	res, err := getDDLInfo()
+	if err != nil {
+		cmd.Println(errors.Wrap(err, "Failed to evict"))
+	}
+	var jsn ddlInfoResponse
+	err = json.Unmarshal([]byte(res), &jsn)
+	if err != nil {
+		cmd.Println(errors.Wrap(err, "Failed to evict"))
+	}
+	var ddlOwnerKey string
+	var ddlOwnerSchemaVersionKey string
+	for _, v := range jsn.Kvs {
+		if strings.HasPrefix(v["key"], ddlOwnerKeyPrefix) {
+			ddlOwnerKey = v["key"]
+			ddlOwnerSchemaVersionKey = ddlAllSchemaVersionsPrefix + v["value"]
+			break
+		}
+	}
+
+	_, err = delKey(ddlOwnerKey)
+	if err != nil {
+		cmd.Println(errors.Wrap(err, "Failed to evict"))
+		return
+	}
+	_, err = delKey(ddlOwnerSchemaVersionKey)
+	if err != nil {
+		cmd.Println(errors.Wrap(err, "Failed to evict"))
+		return
+	}
 }
 
 func getDDLInfo() (string, error) {

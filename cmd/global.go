@@ -15,6 +15,7 @@ package cmd
 
 import (
 	"encoding/base64"
+	"fmt"
 )
 
 func base64Encode(str string) string {
@@ -27,4 +28,31 @@ func base64Decode(str string) (string, error) {
 		return "", err
 	}
 	return string(data), nil
+}
+
+func askForConfirmation() (bool, error) {
+	var response string
+	_, err := fmt.Scanln(&response)
+	if err != nil {
+		return false, err
+	}
+	okResponses := []string{"y", "Y", "yes", "Yes", "YES"}
+	noResponses := []string{"n", "N", "no", "No", "NO"}
+	if containsString(okResponses, response) {
+		return true, nil
+	} else if containsString(noResponses, response) {
+		return false, nil
+	} else {
+		fmt.Println("Please type yes or no and then press enter")
+		return askForConfirmation()
+	}
+}
+
+func containsString(slice []string, element string) bool {
+	for _, ele := range slice {
+		if ele == element {
+			return true
+		}
+	}
+	return false
 }
