@@ -110,7 +110,7 @@ func showDDLInfoCommandFunc(cmd *cobra.Command, args []string) {
 
 func delKeyCommandFunc(cmd *cobra.Command, args []string) {
 	if len(args) != 1 {
-		cmd.Println("Only one argument!")
+		cmd.Println(cmd.UsageString())
 		return
 	}
 
