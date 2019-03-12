@@ -170,16 +170,19 @@ func evictOwnerCommandFunc(cmd *cobra.Command, args []string) {
 	}
 	if err != nil {
 		cmd.Println(errors.Wrap(err, "Failed to evict"))
+		return
 	}
 
 	res, err := getDDLInfo()
 	if err != nil {
 		cmd.Println(errors.Wrap(err, "Failed to evict"))
+		return
 	}
 	var jsn ddlInfoResponse
 	err = json.Unmarshal([]byte(res), &jsn)
 	if err != nil {
 		cmd.Println(errors.Wrap(err, "Failed to evict"))
+		return
 	}
 	var ddlOwnerKey string
 	var ddlOwnerSchemaVersionKey string
