@@ -37,10 +37,6 @@ type ddlInfoResponse struct {
 	Kvs    []map[string]string `json:"kvs"`
 }
 
-const (
-	delAllFlagName = "all"
-)
-
 var (
 	dialClient                 = &http.Client{}
 	rangeQueryPrefix           = "/v3/kv/range"
@@ -48,10 +44,6 @@ var (
 	putPrefix                  = "/v3/kv/put"
 	ddlAllSchemaVersionsPrefix = "/tidb/ddl/all_schema_versions/"
 	ddlOwnerKeyPrefix          = "/tidb/ddl/fg/owner/"
-)
-
-var (
-	delAllFlag bool
 )
 
 // newEtcdCommand returns a etcd subcommand of rootCmd.
