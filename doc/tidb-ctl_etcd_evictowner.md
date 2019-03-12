@@ -1,20 +1,20 @@
-## tidb-ctl etcd delkey
+## tidb-ctl etcd evictowner
 
-Delete the key associated with DDL by `delkey [key]`
+[DANGEROUS] evict the owner.
 
 ### Synopsis
 
 
-Delete the key associated with DDL by `delkey [key]`
+[DANGEROUS] evict the owner.
 
 ```
-tidb-ctl etcd delkey <key> [flags]
+tidb-ctl etcd evictowner [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for delkey
+  -h, --help   help for evictowner
 ```
 
 ### SEE ALSO
