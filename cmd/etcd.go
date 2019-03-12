@@ -163,7 +163,7 @@ func putKeyCommandFunc(cmd *cobra.Command, args []string) {
 }
 
 func evictOwnerCommandFunc(cmd *cobra.Command, args []string) {
-	cmd.Println("[DANGEROUS] Are you sure to evict the owner?yes/no.")
+	cmd.Println("[DANGEROUS] Are you sure to evict the owner? Please type [yes/no].")
 	confirm, err := askForConfirmation()
 	if !confirm {
 		return
@@ -196,12 +196,12 @@ func evictOwnerCommandFunc(cmd *cobra.Command, args []string) {
 
 	_, err = delKey(ddlOwnerKey)
 	if err != nil {
-		cmd.Println(errors.Wrap(err, "Failed to evict"))
+		cmd.Printf("Failed to delete the key:%v\n", ddlOwnerKey)
 		return
 	}
 	_, err = delKey(ddlOwnerSchemaVersionKey)
 	if err != nil {
-		cmd.Println(errors.Wrap(err, "Failed to evict"))
+		cmd.Printf("Failed to delete the key:%v\n", ddlOwnerSchemaVersionKey)
 		return
 	}
 }
