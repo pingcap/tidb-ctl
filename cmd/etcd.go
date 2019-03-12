@@ -91,7 +91,7 @@ func newDelKeyCommand() *cobra.Command {
 func newPutKeyCommand() *cobra.Command {
 	m := &cobra.Command{
 		Use:   "putkey <key> <value>",
-		Short: "[ONLY FOR TEST!] put a key in the path of TiDB schema versions by `putkey [key] [value]`",
+		Short: "[ONLY FOR TEST] put a key in the path of TiDB schema versions by `putkey [key] [value]`",
 		Run:   putKeyCommandFunc,
 	}
 	return m
