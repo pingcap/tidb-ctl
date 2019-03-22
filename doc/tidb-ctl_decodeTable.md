@@ -37,21 +37,21 @@ alter table t add column e varchar(20);
  }
 
 **then use decodeTable use decode table MVCC data**
-▶ ./tidb-ctl decodeTable test.t CAIIAggEAhjpmYjpnJwgaGVsbG8IBgAICAmAgICIkYyr0Rk=
+▶ ./tidb-ctl decodeTable test.t CAIIAggEAhjlk4jlk4ggaGVsbG8IBgAICAmAgICI0Yyr0Rk=
 a:      1
-b:      陈霜 hello
+b:      哈哈 hello
 c is NULL
-d:      2019-03-22 06:04:17
+d:      2019-03-22 06:20:17
 e not found in data
 
 
-if the table id of test.t is 56, you can also use below command to do the same thing.
+if the table id of test.t is 60, you can also use below command to do the same thing.
 
-▶ ./tidb-ctl decodeTable 56 CAIIAggEAhjpmYjpnJwgaGVsbG8IBgAICAmAgICIkYyr0Rk=
+▶ ./tidb-ctl decodeTable 60 CAIIAggEAhjlk4jlk4ggaGVsbG8IBgAICAmAgICI0Yyr0Rk=
 a:      1
-b:      陈霜 hello
+b:      哈哈 hello
 c is NULL
-d:      2019-03-22 06:04:17
+d:      2019-03-22 06:20:17
 e not found in data
 
 As you can see, data of column c is NULL, and data of column e is not found in data, because e is added latter, TiDB currently have not back fill data for added after column.
