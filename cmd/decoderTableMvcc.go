@@ -18,8 +18,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -29,6 +27,8 @@ import (
 	"github.com/pingcap/tidb/model"
 	"github.com/pingcap/tidb/tablecodec"
 	"github.com/pingcap/tidb/types"
+	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
 )
 
 var decodeTableExample string = `
@@ -77,11 +77,11 @@ As you can see, data of column c is NULL, and data of column e is not found in d
 
 // schemaRootCmd represents the schema command
 var decodeTableCmd = &cobra.Command{
-	Use:   "decodeTable",
-	Short: "Decode table mvcc data",
-	Long:  "'tidb-ctl decodeTable' decode table mvcc data.",
+	Use:     "decodeTable",
+	Short:   "Decode table mvcc data",
+	Long:    "'tidb-ctl decodeTable' decode table mvcc data.",
 	Example: decodeTableExample,
-	RunE:  decodeTableMVCC,
+	RunE:    decodeTableMVCC,
 }
 
 func decodeTableMVCC(_ *cobra.Command, args []string) error {
