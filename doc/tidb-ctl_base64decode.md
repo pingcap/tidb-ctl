@@ -26,7 +26,7 @@ uint64: 1
 
    **prepare execute below sql**
 
-```shell
+```sql
 use test;
 create table t (a int, b varchar(20),c datetime default current_timestamp , d timestamp default current_timestamp);
 insert into t (a,b,c) values(1,"哈哈 hello",NULL);
