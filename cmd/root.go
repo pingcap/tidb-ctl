@@ -62,7 +62,7 @@ func genDocument(c *cobra.Command, args []string) error {
 		Short: rootShort,
 		Long:  rootLong,
 	}
-	docCmd.AddCommand(mvccRootCmd, schemaRootCmd, regionRootCmd, tableRootCmd, decoderCmd, newBase64decodeCmd, newEtcdCommand(), decodeTableCmd)
+	docCmd.AddCommand(mvccRootCmd, schemaRootCmd, regionRootCmd, tableRootCmd, decoderCmd, newBase64decodeCmd, newEtcdCommand())
 	fmt.Println("Generating documents...")
 	if err := doc.GenMarkdownTree(docCmd, docDir); err != nil {
 		return err
@@ -116,7 +116,7 @@ func init() {
 	pdHostFlagName := "pdhost"
 	pdPortFlagName := "pdport"
 
-	rootCmd.AddCommand(mvccRootCmd, schemaRootCmd, regionRootCmd, tableRootCmd, newBase64decodeCmd, decoderCmd, newEtcdCommand(), decodeTableCmd)
+	rootCmd.AddCommand(mvccRootCmd, schemaRootCmd, regionRootCmd, tableRootCmd, newBase64decodeCmd, decoderCmd, newEtcdCommand())
 
 	rootCmd.PersistentFlags().IPVarP(&host, hostFlagName, "H", net.ParseIP("127.0.0.1"), "TiDB server host")
 	rootCmd.PersistentFlags().Uint16VarP(&port, portFlagName, "P", 10080, "TiDB server port")
