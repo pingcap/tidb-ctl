@@ -95,7 +95,7 @@ func getTableInfo(id string) (tblInfo *model.TableInfo, err error) {
 		}
 		url = "/" + fields[0] + "/" + fields[1]
 	} else {
-		// tread as table id.
+		// treat as table id.
 		url = "?table_id=" + id
 	}
 
