@@ -49,7 +49,7 @@ alter table t add column e varchar(20);
  }
 ```
 
-**then use decodeTable use decode table MVCC data**
+**then decode table base64 raw data**
 
 ```shell
 ▶ ./tidb-ctl base64decode test.t CAIIAggEAhjlk4jlk4ggaGVsbG8IBgAICAmAgICI0Yyr0Rk=
