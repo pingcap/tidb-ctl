@@ -13,7 +13,7 @@ tidb-ctl base64decode [flags]
 
 ### Examples
 
-1. Decode base64 value: `tidb-ctl base64decode [base64_data`
+#### Decode base64 value: `tidb-ctl base64decode [base64_data`
 
 ```shell
 ▶ tidb-ctl base64decode AAAAAAAAAAE=
@@ -22,7 +22,7 @@ uint64: 1
 
 ```
 
-2. Decode base64 with table schema.`tidb-ctl base64decode db_name.table_name [base64_data]`
+#### Decode base64 with table schema.`tidb-ctl base64decode db_name.table_name [base64_data]`
 
    **prepare execute below sql**
 
@@ -33,7 +33,7 @@ insert into t (a,b,c) values(1,"哈哈 hello",NULL);
 alter table t add column e varchar(20);
 ```
 
-**then you can use http api to get MVCC data.**
+**then you can use http api to get MVCC data**
 
 ```shell
 ▶ curl "http://$IP:10080/mvcc/key/test/t/1"
@@ -52,7 +52,7 @@ alter table t add column e varchar(20);
 **then use decodeTable use decode table MVCC data**
 
 ```shell
-▶ ./tidb-ctl decodeTable test.t CAIIAggEAhjlk4jlk4ggaGVsbG8IBgAICAmAgICI0Yyr0Rk=
+▶ ./tidb-ctl base64decode test.t CAIIAggEAhjlk4jlk4ggaGVsbG8IBgAICAmAgICI0Yyr0Rk=
 a:      1
 b:      哈哈 hello
 c is NULL
@@ -61,7 +61,7 @@ e not found in data
 
 
 # if the table id of test.t is 60, you can also use below command to do the same thing.
-▶ ./tidb-ctl decodeTable 60 CAIIAggEAhjlk4jlk4ggaGVsbG8IBgAICAmAgICI0Yyr0Rk=
+▶ ./tidb-ctl base64decode 60 CAIIAggEAhjlk4jlk4ggaGVsbG8IBgAICAmAgICI0Yyr0Rk=
 a:      1
 b:      哈哈 hello
 c is NULL
