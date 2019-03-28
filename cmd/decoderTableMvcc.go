@@ -78,15 +78,15 @@ As you can see, data of column c is NULL, and data of column e is not found in d
 // schemaRootCmd represents the schema command
 var decodeTableCmd = &cobra.Command{
 	Use:     "decodeTable",
-	Short:   "Decode table mvcc data",
-	Long:    "'tidb-ctl decodeTable' decode table mvcc data.",
+	Short:   "Decode table raw data",
+	Long:    "'tidb-ctl decodeTable' decode table row data.",
 	Example: decodeTableExample,
 	RunE:    decodeTableMVCC,
 }
 
 func decodeTableMVCC(_ *cobra.Command, args []string) error {
 	if len(args) != 2 {
-		return errors.Errorf("need 2 param. eg: tidb-ctl decodeTable test.t CAIIAggEAhjpmYjpnJwgaGVsbG8IBgAICAmAgICg9oqr0Rk=")
+		return errors.Errorf("need 2 param. eg: tidb-ctl decodeTable dbName.tableName raw_data")
 	}
 	tblInfo, err := getTableInfo(args[0])
 	if err != nil {
@@ -129,7 +129,7 @@ func getTableInfo(id string) (tblInfo *model.TableInfo, err error) {
 		return
 	}
 	if resp.StatusCode != http.StatusOK {
-		return nil, errors.Errorf("get  table info status code is no ok. body: %s", string(body))
+		return nil, errors.Errorf("get table info status code is no ok. body: %s", string(body))
 	}
 	tblInfo = &model.TableInfo{}
 	err = json.Unmarshal(body, tblInfo)
