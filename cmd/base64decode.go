@@ -38,7 +38,7 @@ var newBase64decodeCmd = &cobra.Command{
 	Use:     "base64decode",
 	Short:   "decode base64 value",
 	Long:    "decode base64 value to hex and uint64",
-	Example: "tidb-ctl base64decode [base64_data]\ntidb-ctl base64decode db_name.table_name [base64_data]",
+	Example: "tidb-ctl base64decode [base64_data]\ntidb-ctl base64decode [db_name.table_name] [base64_data]\ntidb-ctl base64decode [table_id] [base64_data]",
 	RunE:    base64decodeCmd,
 }
 
