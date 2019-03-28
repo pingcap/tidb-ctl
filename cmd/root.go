@@ -118,10 +118,10 @@ func init() {
 
 	rootCmd.AddCommand(mvccRootCmd, schemaRootCmd, regionRootCmd, tableRootCmd, newBase64decodeCmd, decoderCmd, newEtcdCommand())
 
-	rootCmd.PersistentFlags().IPVarP(&host, hostFlagName, "H", net.ParseIP("127.0.0.1"), "TiDB server host")
-	rootCmd.PersistentFlags().Uint16VarP(&port, portFlagName, "P", 10080, "TiDB server port")
-	rootCmd.PersistentFlags().IPVarP(&pdHost, pdHostFlagName, "i", net.ParseIP("127.0.0.1"), "PD server host")
-	rootCmd.PersistentFlags().Uint16VarP(&pdPort, pdPortFlagName, "p", 2379, "PD server port")
+	rootCmd.PersistentFlags().IPVarP(&host, hostFlagName, "", net.ParseIP("127.0.0.1"), "TiDB server host")
+	rootCmd.PersistentFlags().Uint16VarP(&port, portFlagName, "", 10080, "TiDB server port")
+	rootCmd.PersistentFlags().IPVarP(&pdHost, pdHostFlagName, "", net.ParseIP("127.0.0.1"), "PD server host")
+	rootCmd.PersistentFlags().Uint16VarP(&pdPort, pdPortFlagName, "", 2379, "PD server port")
 	rootCmd.Flags().BoolVar(&genDoc, docFlagName, false, "generate doc file")
 	if err := rootCmd.Flags().MarkHidden(docFlagName); err != nil {
 		fmt.Printf("can not mark hidden flag, flag %s is not found", docFlagName)
