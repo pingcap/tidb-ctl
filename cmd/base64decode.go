@@ -15,26 +15,44 @@ package cmd
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/binary"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
 
+	"github.com/pingcap/tidb/model"
+	"github.com/pingcap/tidb/tablecodec"
+	"github.com/pingcap/tidb/types"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
 // base64decodeCmd represents the base64decode command
 var newBase64decodeCmd = &cobra.Command{
-	Use:   "base64decode",
-	Short: "decode base64 value",
-	Long:  "decode base64 value to hex and uint64",
-	RunE:  base64decodeCmd,
+	Use:     "base64decode",
+	Short:   "decode base64 value",
+	Long:    "decode base64 value to hex and uint64",
+	Example: "tidb-ctl base64decode [base64_data]\ntidb-ctl base64decode [db_name.table_name] [base64_data]\ntidb-ctl base64decode [table_id] [base64_data]",
+	RunE:    base64decodeCmd,
 }
 
 func base64decodeCmd(c *cobra.Command, args []string) error {
-	if len(args) != 1 {
-		return fmt.Errorf("Only support one argument!")
+	if len(args) == 1 {
+		return decodeBase64Value(c, args[0])
+	} else if len(args) == 2 {
+		return decodeTableMVCC(c, args)
+	} else {
+		return fmt.Errorf("Only support 1 or 2 argument!")
 	}
-	inputValue := args[0]
+}
+
+func decodeBase64Value(c *cobra.Command, inputValue string) error {
 	uDec, err := base64Decode(inputValue)
 	if err != nil {
 		return err
@@ -50,4 +68,97 @@ func base64decodeCmd(c *cobra.Command, args []string) error {
 		c.Printf("uint64: %d\n", num)
 	}
 	return nil
+}
+
+func decodeTableMVCC(_ *cobra.Command, args []string) error {
+	if len(args) != 2 {
+		return errors.Errorf("need 2 param. eg: tidb-ctl decodeTable dbName.tableName raw_data")
+	}
+	tblInfo, err := getTableInfo(args[0])
+	if err != nil {
+		return err
+	}
+	result, err := decodeMVCC(tblInfo, args[1])
+	if err != nil {
+		return err
+	}
+	fmt.Println(result)
+	return nil
+}
+
+func getTableInfo(id string) (tblInfo *model.TableInfo, err error) {
+	url := ""
+	if strings.Contains(id, ".") {
+		fields := strings.Split(id, ".")
+		if len(fields) != 2 {
+			return nil, errors.Errorf("wrong table name. need like: test.t1")
+		}
+		url = "/" + fields[0] + "/" + fields[1]
+	} else {
+		// treat as table id.
+		url = "?table_id=" + id
+	}
+
+	url = "http://" + host.String() + ":" + strconv.Itoa(int(port)) + "/" + "schema" + url
+	var resp *http.Response
+	resp, err = http.Get(url)
+	if err != nil {
+		return
+	}
+	defer func() {
+		if errClose := resp.Body.Close(); errClose != nil && err == nil {
+			err = errClose
+		}
+	}()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.Errorf("get table info status code is no ok. body: %s", string(body))
+	}
+	tblInfo = &model.TableInfo{}
+	err = json.Unmarshal(body, tblInfo)
+	return tblInfo, err
+}
+
+func decodeMVCC(tbl *model.TableInfo, base64Str string) (string, error) {
+	if len(base64Str) == 0 {
+		return "", errors.Errorf("no data?")
+	}
+	var buf bytes.Buffer
+	bs, err := base64.StdEncoding.DecodeString(base64Str)
+	if err != nil {
+		return "", err
+	}
+	colMap := make(map[int64]*types.FieldType, 3)
+	for _, col := range tbl.Columns {
+		colMap[col.ID] = &col.FieldType
+	}
+
+	r, err := tablecodec.DecodeRow(bs, colMap, time.UTC)
+	if err != nil {
+		return "", err
+	}
+	if r == nil {
+		return "", errors.Errorf("no data???")
+	}
+
+	for _, col := range tbl.Columns {
+		if v, ok := r[col.ID]; ok {
+			if v.IsNull() {
+				buf.WriteString(col.Name.L + " is NULL\n")
+				continue
+			}
+			ss, err := v.ToString()
+			if err != nil {
+				buf.WriteString(col.Name.L + " ToString error: " + err.Error() + fmt.Sprintf("datum: %#v", v) + "\n")
+				continue
+			}
+			buf.WriteString(col.Name.L + ":\t" + ss + "\n")
+		} else {
+			buf.WriteString(col.Name.L + " not found in data\n")
+		}
+	}
+	return buf.String(), nil
 }
