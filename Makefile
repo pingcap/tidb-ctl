@@ -22,8 +22,8 @@ check:
 	@ gofmt -s -l -w $(FILES) 2>&1 | awk '{print} END{if(NR>0) {exit 1}}'
 
 	@echo "vet"
-	@ go tool vet -all -shadow *.go 2>&1 | awk '{print} END{if(NR>0) {exit 1}}'
-	@ go tool vet -all -shadow $(TOPDIRS) 2>&1 | awk '{print} END{if(NR>0) {exit 1}}'
+	@$(GO) vet -all *.go 2>&1 | awk '{print} END{if(NR>0) {exit 1}}'
+	@$(GO) vet -all $(TOPDIRS) 2>&1 | awk '{print} END{if(NR>0) {exit 1}}'
 
 	@echo "golint"
 	GO111MODULE=off go get github.com/golang/lint/golint
