@@ -62,7 +62,7 @@ func genDocument(c *cobra.Command, args []string) error {
 		Short: rootShort,
 		Long:  rootLong,
 	}
-	docCmd.AddCommand(mvccRootCmd, schemaRootCmd, regionRootCmd, tableRootCmd, decoderCmd, newBase64decodeCmd, newEtcdCommand())
+	docCmd.AddCommand(mvccRootCmd, schemaRootCmd, regionRootCmd, tableRootCmd, decoderCmd, newBase64decodeCmd)
 	fmt.Println("Generating documents...")
 	if err := doc.GenMarkdownTree(docCmd, docDir); err != nil {
 		return err
@@ -113,15 +113,11 @@ func init() {
 	hostFlagName := "host"
 	portFlagName := "port"
 	docFlagName := "doc"
-	pdHostFlagName := "pdhost"
-	pdPortFlagName := "pdport"
 
-	rootCmd.AddCommand(mvccRootCmd, schemaRootCmd, regionRootCmd, tableRootCmd, newBase64decodeCmd, decoderCmd, logCmd, newEtcdCommand())
+	rootCmd.AddCommand(mvccRootCmd, schemaRootCmd, regionRootCmd, tableRootCmd, newBase64decodeCmd, decoderCmd, logCmd)
 
 	rootCmd.PersistentFlags().IPVarP(&host, hostFlagName, "", net.ParseIP("127.0.0.1"), "TiDB server host")
 	rootCmd.PersistentFlags().Uint16VarP(&port, portFlagName, "", 10080, "TiDB server port")
-	rootCmd.PersistentFlags().IPVarP(&pdHost, pdHostFlagName, "", net.ParseIP("127.0.0.1"), "PD server host")
-	rootCmd.PersistentFlags().Uint16VarP(&pdPort, pdPortFlagName, "", 2379, "PD server port")
 	rootCmd.Flags().BoolVar(&genDoc, docFlagName, false, "generate doc file")
 	if err := rootCmd.Flags().MarkHidden(docFlagName); err != nil {
 		fmt.Printf("can not mark hidden flag, flag %s is not found", docFlagName)
