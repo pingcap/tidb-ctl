@@ -109,6 +109,23 @@ func decodeTableIndex(buf []byte) (int64, int64, []indexValue, error) {
 			return 0, 0, nil, err
 		}
 		return tableID, rowID, values, nil
+	} else if len(buf) >= 22 && buf[0] == 't' && buf[10] == '_' && buf[11] == 'i' {
+		tmp := make([]byte, 0)
+		for i, val := range buf {
+			if (i + 1) % 9 != 0 {
+				tmp = append(tmp, val)
+			}
+		}
+		pad := int(255 - buf[len(buf) - 1])
+		tmp = tmp[:len(tmp)-pad]
+		tableid, rowid, indexValue := tmp[1:9], tmp[11:19], tmp[19:]
+		_, tableID, _ := codec.DecodeInt(tableid)
+		_, rowID, _ := codec.DecodeInt(rowid)
+		values, err := decodeIndexValue(indexValue)
+		if err != nil {
+			return 0, 0, nil, err
+		}
+		return tableID, rowID, values, nil
 	}
 	return 0, 0, nil, errors.Errorf("illegal code format")
 }
