@@ -114,8 +114,24 @@ func decodeTableIndex(buf []byte) (int64, int64, []indexValue, error) {
 }
 
 func decodeTableRow(buf []byte) (int64, int64, error) {
-	if len(buf) == 19 && buf[0] == 't' && buf[9] == '_' && buf[10] == 'r' {
-		tableid, rowid := buf[1:9], buf[11:]
+	if len(buf) >= 19 && buf[0] == 't' && buf[9] == '_' && buf[10] == 'r' {
+		tableid, rowid := buf[1:9], buf[11:19]
+		_, tableID, _ := codec.DecodeInt(tableid)
+		_, rowID, _ := codec.DecodeInt(rowid)
+		return tableID, rowID, nil
+	} else if len(buf) >= 22 && buf[0] == 't' && buf[10] == '_' && buf[11] == 'r' {
+		tmp := buf[:22]
+		tableid, rowid := make([]byte, 0, 8), make([]byte, 0, 8)
+		for i, val := range tmp {
+			if i == 8 || i == 17 {
+				continue
+			}
+			if i > 0 && i < 10 {
+				tableid = append(tableid, val)
+			} else if i > 11 {
+				rowid = append(rowid, val)
+			}
+		}
 		_, tableID, _ := codec.DecodeInt(tableid)
 		_, rowID, _ := codec.DecodeInt(rowid)
 		return tableID, rowID, nil

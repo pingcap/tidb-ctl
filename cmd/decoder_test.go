@@ -19,6 +19,11 @@ func (s *decoderTestSuite) TestTableRowDecode(c *C) {
 	_, output, err = executeCommandC(cmd, args...)
 	c.Assert(err, IsNil)
 	c.Check(string(output), Equals, "format: table_row\ntable_id: 1935\nrow_id: 539578\n")
+
+	args = []string{"decoder", "\200\000\000\000\000\000\025\377\316_r\200\000\001j\331\377\357vI\000\000\000\000\000\372"}
+	_, output, err = executeCommandC(cmd, args...)
+	c.Assert(err, IsNil)
+	c.Check(string(output), Equals, "format: table_row\ntable_id: 5582\nrow_id: 1558434510409\n")
 }
 
 func (s *decoderTestSuite) TestTableIndexDecode(c *C) {
