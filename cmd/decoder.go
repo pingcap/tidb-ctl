@@ -171,7 +171,7 @@ func decodeKeyFunc(c *cobra.Command, args []string) error {
 	// Try to decode using table_index format.
 	tableID, rowID, indexvalues, err := decodeTableIndex([]byte(raw))
 	if err == nil {
-		c.Printf("format: table_index\ntable_id: %v\nrow_id: %v\n", tableID, rowID)
+		c.Printf("format: table_index\ntable_id: %v\nindex_id: %v\n", tableID, rowID)
 		for i, iv := range indexvalues {
 			c.Printf("index_value[%v]: {type: %v, value: %v}\n", i, iv.typename, iv.valueStr)
 		}

@@ -1,4 +1,4 @@
-// Copyright 2018 PingCAP, Inc.
+// Copyright 2019 PingCAP, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -46,9 +46,19 @@ func (s *decoderTestSuite) TestTableIndexDecode(c *C) {
 	c.Assert(err, IsNil)
 	c.Check(string(output), Equals, "format: table_index\n"+
 		"table_id: 95\n"+
-		"row_id: 1\n"+
+		"index_id: 1\n"+
 		"index_value[0]: {type: bigint, value: 2}\n"+
 		"index_value[1]: {type: bigint, value: 2}\n")
+
+	args = []string{"decoder", "t\200\000\000\000\000\000\000\255_i\200\000\000\000\000\000\000\001\003\200\000\000\000\000e\221|\003\200\000\000\000\0008\307\024\003\200\000\000\000\0014\025\230\003\200\000\000\000"}
+	_, output, err = executeCommandC(cmd, args...)
+	c.Assert(err, IsNil)
+	c.Check(string(output), Equals, "format: table_index\n"+
+		"table_id: 173\n"+
+		"index_id: 1\n"+
+		"index_value[0]: {type: bigint, value: 6656380}\n"+
+		"index_value[1]: {type: bigint, value: 3720980}\n" +
+		"index_value[2]: {type: bigint, value: 20190616}\n")
 }
 
 func (s *decoderTestSuite) TestIndexValueDecode(c *C) {
