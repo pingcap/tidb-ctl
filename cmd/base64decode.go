@@ -48,7 +48,7 @@ func base64decodeCmd(c *cobra.Command, args []string) error {
 	} else if len(args) == 2 {
 		return decodeTableMVCC(c, args)
 	} else {
-		return fmt.Errorf("Only support 1 or 2 argument!")
+		return fmt.Errorf("only support 1 or 2 argument")
 	}
 }
 

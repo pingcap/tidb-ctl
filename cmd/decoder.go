@@ -22,28 +22,24 @@ import (
 
 	"github.com/pingcap/tidb/types"
 	"github.com/pingcap/tidb/util/codec"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-)
-
-var (
-	keyFormat string
-	keyValue  string
-)
-
-const (
-	formatFlagName = "format"
-	keyFlagName    = "key"
 )
 
 // decoderCmd represents the key-decoder command
 var decoderCmd = &cobra.Command{
 	Use:   "decoder",
 	Short: "decode key",
-	Long: `decode --format (tabel_row/table_index/value) --key (key)
+	Long: `decode "key"
+	currently support:
 	table_row:   key format like 'txxx_rxxx'
 	table_index: key format like 'txxx_ixxx'
 	value:       base64 encoded value`,
 	RunE: decodeKeyFunc,
+}
+
+type indexValue struct {
+	typename, valueStr string
 }
 
 func decodeKey(text string) (string, error) {
@@ -87,78 +83,112 @@ func decodeKey(text string) (string, error) {
 	return string(buf), nil
 }
 
-func decodeIndexValue(buf []byte) {
+func decodeIndexValue(buf []byte) ([]indexValue, error) {
 	key := buf
+	values := make([]indexValue, 0, 10)
 	for len(key) > 0 {
-		remain, d, e := codec.DecodeOne(key)
-		if e != nil {
+		remain, d, err := codec.DecodeOne(key)
+		if err != nil {
 			break
-		} else {
-			s, _ := d.ToString()
-			typeStr := types.KindStr(d.Kind())
-			fmt.Printf("type: %v, value: %v\n", typeStr, s)
 		}
+		s, _ := d.ToString()
+		typeStr := types.KindStr(d.Kind())
+		values = append(values, indexValue{typename: typeStr, valueStr: s})
 		key = remain
 	}
+	return values, nil
 }
 
-func decodeTableIndex(buf []byte) error {
+func decodeTableIndex(buf []byte) (int64, int64, []indexValue, error) {
 	if len(buf) >= 19 && buf[0] == 't' && buf[9] == '_' && buf[10] == 'i' {
-		table_id := buf[1:9]
-		row_id := buf[11:19]
-		indexValue := buf[19:]
-		_, tableID, _ := codec.DecodeInt(table_id)
-		fmt.Printf("table_id: %v\n", tableID)
-		_, rowID, _ := codec.DecodeInt(row_id)
-		fmt.Printf("index_id: %v\n", rowID)
-		decodeIndexValue(indexValue)
-		return nil
+		tableid, rowid, indexValue := buf[1:9], buf[11:19], buf[19:]
+		_, tableID, _ := codec.DecodeInt(tableid)
+		_, rowID, _ := codec.DecodeInt(rowid)
+		values, err := decodeIndexValue(indexValue)
+		if err != nil {
+			return 0, 0, nil, err
+		}
+		return tableID, rowID, values, nil
+	} else if len(buf) >= 22 && buf[0] == 't' && buf[10] == '_' && buf[11] == 'i' {
+		tmp := make([]byte, 0)
+		for i, val := range buf {
+			if (i + 1) % 9 != 0 {
+				tmp = append(tmp, val)
+			}
+		}
+		pad := int(255 - buf[len(buf) - 1])
+		tmp = tmp[:len(tmp)-pad]
+		tableid, rowid, indexValue := tmp[1:9], tmp[11:19], tmp[19:]
+		_, tableID, _ := codec.DecodeInt(tableid)
+		_, rowID, _ := codec.DecodeInt(rowid)
+		values, err := decodeIndexValue(indexValue)
+		if err != nil {
+			return 0, 0, nil, err
+		}
+		return tableID, rowID, values, nil
 	}
-	return fmt.Errorf("illegal code format")
+	return 0, 0, nil, errors.Errorf("illegal code format")
 }
 
-func decodeTableRow(buf []byte) error {
-	if len(buf) == 19 && buf[0] == 't' && buf[9] == '_' && buf[10] == 'r' {
-		table_id := buf[1:9]
-		row_id := buf[11:]
-		_, tableID, _ := codec.DecodeInt(table_id)
-		fmt.Printf("table_id: %v\n", tableID)
-		_, rowID, _ := codec.DecodeInt(row_id)
-		fmt.Printf("row_id: %v\n", rowID)
-		return nil
+func decodeTableRow(buf []byte) (int64, int64, error) {
+	if len(buf) >= 19 && buf[0] == 't' && buf[9] == '_' && buf[10] == 'r' {
+		tableid, rowid := buf[1:9], buf[11:19]
+		_, tableID, _ := codec.DecodeInt(tableid)
+		_, rowID, _ := codec.DecodeInt(rowid)
+		return tableID, rowID, nil
+	} else if len(buf) >= 22 && buf[0] == 't' && buf[10] == '_' && buf[11] == 'r' {
+		tmp := buf[:22]
+		tableid, rowid := make([]byte, 0, 8), make([]byte, 0, 8)
+		for i, val := range tmp {
+			if i == 8 || i == 17 {
+				continue
+			}
+			if i > 0 && i < 10 {
+				tableid = append(tableid, val)
+			} else if i > 11 {
+				rowid = append(rowid, val)
+			}
+		}
+		_, tableID, _ := codec.DecodeInt(tableid)
+		_, rowID, _ := codec.DecodeInt(rowid)
+		return tableID, rowID, nil
 	}
-	return fmt.Errorf("illegal code format")
+	return 0, 0, errors.Errorf("illegal code format")
 }
 
-func decodeKeyFunc(_ *cobra.Command, args []string) error {
-	if len(args) > 2 {
+func decodeKeyFunc(c *cobra.Command, args []string) error {
+	if len(args) > 1 {
 		return fmt.Errorf("too many arguments")
 	}
-	if keyFormat == "" {
-		return fmt.Errorf("format argument can not be null")
+	keyValue := args[0]
+	raw, _ := decodeKey(keyValue)
+	// Try to decode using table_row format.
+	tableID, rowID, err := decodeTableRow([]byte(raw))
+	if err == nil {
+		c.Printf("format: table_row\ntable_id: %v\nrow_id: %v\n", tableID, rowID)
+		return nil
 	}
-	if keyValue == "" {
-		return fmt.Errorf("no key to decode")
-	}
-	if keyFormat == "table_row" {
-		raw, _ := decodeKey(keyValue)
-		err := decodeTableRow([]byte(raw))
-		return err
-	} else if keyFormat == "table_index" {
-		raw, _ := decodeKey(keyValue)
-		err := decodeTableIndex([]byte(raw))
-		return err
-	} else if keyFormat == "value" {
-		b64decode, err := base64.StdEncoding.DecodeString(keyValue)
-		if err != nil {
-			return err
+	// Try to decode using table_index format.
+	tableID, rowID, indexvalues, err := decodeTableIndex([]byte(raw))
+	if err == nil {
+		c.Printf("format: table_index\ntable_id: %v\nindex_id: %v\n", tableID, rowID)
+		for i, iv := range indexvalues {
+			c.Printf("index_value[%v]: {type: %v, value: %v}\n", i, iv.typename, iv.valueStr)
 		}
-		decodeIndexValue(b64decode)
+		return nil
+	}
+	// Try to decode using index_value format.
+	b64decode, err := base64.StdEncoding.DecodeString(keyValue)
+	if err != nil {
+		return err
+	}
+	indexvalues, err = decodeIndexValue(b64decode)
+	if err != nil {
+		return err
+	}
+	c.Printf("format: index_value\n")
+	for i, iv := range indexvalues {
+		c.Printf("index_value[%v]: {type: %v, value: %v}\n", i, iv.typename, iv.valueStr)
 	}
 	return nil
-}
-
-func init() {
-	decoderCmd.Flags().StringVarP(&keyFormat, formatFlagName, "f", "", "the key format you want decode")
-	decoderCmd.Flags().StringVarP(&keyValue, keyFlagName, "k", "", "the key you want decode")
 }

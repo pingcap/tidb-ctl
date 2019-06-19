@@ -32,7 +32,6 @@ var _ = Suite(&cmdTestSuite{})
 type cmdTestSuite struct{}
 
 func (s *cmdTestSuite) TestBase64Decode(c *C) {
-	c.Parallel()
 	cmd := initCommand()
 	args := []string{"base64decode", "AAAAACqPhb0="}
 	_, output, err := executeCommandC(cmd, args...)
