@@ -89,7 +89,7 @@ func decodeIndexValue(buf []byte) ([]indexValue, error) {
 	for len(key) > 0 {
 		remain, d, err := codec.DecodeOne(key)
 		if err != nil {
-			return nil, err
+			break
 		}
 		s, _ := d.ToString()
 		typeStr := types.KindStr(d.Kind())
