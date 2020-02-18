@@ -40,7 +40,7 @@ require (
 	github.com/pingcap/tipb v0.0.0-20190226124958-833c2ffd2fe7 // indirect
 	github.com/pkg/errors v0.8.1
 	github.com/prometheus/client_golang v0.9.2 // indirect
-	github.com/remyoudompheng/bigfft v0.0.0-20170806203942-52369c62f446 // indirect
+	github.com/remyoudompheng/bigfft v0.0.0-20190728182440-6a916e37a237 // indirect
 	github.com/russross/blackfriday v0.0.0-20170728175326-4048872b16cc // indirect
 	github.com/sirupsen/logrus v1.3.0 // indirect
 	github.com/soheilhy/cmux v0.1.4 // indirect
@@ -64,3 +64,5 @@ require (
 	gopkg.in/mgo.v2 v2.0.0-20180705113604-9856a29383ce // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 )
+
+go 1.13
