@@ -99,9 +99,9 @@ func getTableInfo(id string) (tblInfo *model.TableInfo, err error) {
 		url = "?table_id=" + id
 	}
 
-	url = "http://" + host.String() + ":" + strconv.Itoa(int(port)) + "/" + "schema" + url
+	url = schema + "://" + host.String() + ":" + strconv.Itoa(int(port)) + "/" + "schema" + url
 	var resp *http.Response
-	resp, err = http.Get(url)
+	resp, err = ctlClient.Get(url)
 	if err != nil {
 		return
 	}

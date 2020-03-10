@@ -33,7 +33,6 @@ type parameter struct {
 }
 
 var (
-	dialClient                 = &http.Client{}
 	rangeQueryPrefix           = "/v3/kv/range"
 	rangeDelPrefix             = "/v3/kv/deleterange"
 	putPrefix                  = "/v3/kv/put"
@@ -122,7 +121,7 @@ func delKeyCommandFunc(cmd *cobra.Command, args []string) {
 		cmd.Printf("Failed to delete key: %v\n", err)
 		return
 	}
-	res, err := dail(req)
+	res, err := dial(req)
 	if err != nil {
 		cmd.Printf("Failed to delete key: %v\n", err)
 		return
@@ -159,7 +158,7 @@ func putKeyCommandFunc(cmd *cobra.Command, args []string) {
 		cmd.Printf("Failed to put key: %v\n", err)
 		return
 	}
-	res, err := dail(req)
+	res, err := dial(req)
 	if err != nil {
 		cmd.Printf("Failed to put key: %v\n", err)
 		return
@@ -185,7 +184,7 @@ func getDDLInfo() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	res, err := dail(req)
+	res, err := dial(req)
 	if err != nil {
 		return "", err
 	}
@@ -201,7 +200,7 @@ func getRequest(prefix string, method string, bodyType string, body io.Reader) (
 	if method == "" {
 		method = http.MethodGet
 	}
-	url := "http://" + pdHost.String() + ":" + strconv.Itoa(int(pdPort)) + prefix
+	url := schema + "://" + pdHost.String() + ":" + strconv.Itoa(int(pdPort)) + prefix
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		return nil, err
@@ -210,9 +209,9 @@ func getRequest(prefix string, method string, bodyType string, body io.Reader) (
 	return req, err
 }
 
-func dail(req *http.Request) (string, error) {
+func dial(req *http.Request) (string, error) {
 	var res string
-	reps, err := dialClient.Do(req)
+	reps, err := ctlClient.Do(req)
 	if err != nil {
 		return res, err
 	}
