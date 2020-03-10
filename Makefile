@@ -24,12 +24,12 @@ check:
 	@ $(GO) vet -all $(PACKAGES) 2>&1 | awk '{print} END{if(NR>0) {exit 1}}'
 
 	@echo "golint"
-	@ $(GO) get golang.org/x/lint/golint
-	@ golint -set_exit_status $(PACKAGES)
+	@ $(GO) build golang.org/x/lint/golint
+	@ ./golint -set_exit_status $(PACKAGES)
 
 	@echo "errcheck"
-	@ $(GO) get github.com/kisielk/errcheck
-	@ errcheck -blank $(PACKAGES) | grep -v "_test\.go" | awk '{print} END{if(NR>0) {exit 1}}'
+	@ $(GO) build github.com/kisielk/errcheck
+	@ ./errcheck -blank $(PACKAGES) | grep -v "_test\.go" | awk '{print} END{if(NR>0) {exit 1}}'
 
 test: check
 	@ log_level=fatal $(GO) test $(PACKAGES)
