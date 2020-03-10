@@ -144,7 +144,7 @@ func init() {
 		return
 	}
 	cobra.OnInitialize(func() {
-		tlsConfig, err := prepareTlsConfig()
+		tlsConfig, err := prepareTLSConfig()
 		if err != nil {
 			fmt.Printf("cannot setup tls: %v", err)
 		}
@@ -161,7 +161,7 @@ func init() {
 	})
 }
 
-func prepareTlsConfig() (tlsConfig *tls.Config, err error) {
+func prepareTLSConfig() (tlsConfig *tls.Config, err error) {
 	if len(ca) != 0 {
 		tlsConfig = &tls.Config{}
 		certPool := x509.NewCertPool()

@@ -33,7 +33,7 @@ func (s *decoderTestSuite) TestTableRowDecode(c *C) {
 	c.Assert(err, IsNil)
 	c.Check(string(output), Equals, "format: table_row\ntable_id: 1935\nrow_id: 539578\n")
 
-	args = []string{"decoder", "\200\000\000\000\000\000\025\377\316_r\200\000\001j\331\377\357vI\000\000\000\000\000\372"}
+	args = []string{"decoder", "t\200\000\000\000\000\000\025\377\316_r\200\000\001j\331\377\357vI\000\000\000\000\000\372"}
 	_, output, err = executeCommandC(cmd, args...)
 	c.Assert(err, IsNil)
 	c.Check(string(output), Equals, "format: table_row\ntable_id: 5582\nrow_id: 1558434510409\n")
@@ -57,7 +57,7 @@ func (s *decoderTestSuite) TestTableIndexDecode(c *C) {
 		"table_id: 173\n"+
 		"index_id: 1\n"+
 		"index_value[0]: {type: bigint, value: 6656380}\n"+
-		"index_value[1]: {type: bigint, value: 3720980}\n" +
+		"index_value[1]: {type: bigint, value: 3720980}\n"+
 		"index_value[2]: {type: bigint, value: 20190616}\n")
 }
 

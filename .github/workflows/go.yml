@@ -31,4 +31,4 @@ jobs:
         fi
 
     - name: Go Test
-      run: go test ./...
+      run: make test

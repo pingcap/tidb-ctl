@@ -16,6 +16,7 @@ package cmd
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -211,16 +212,21 @@ func getRequest(prefix string, method string, bodyType string, body io.Reader) (
 
 func dial(req *http.Request) (string, error) {
 	var res string
-	reps, err := ctlClient.Do(req)
+	resp, err := ctlClient.Do(req)
 	if err != nil {
 		return res, err
 	}
-	defer reps.Body.Close()
-	if reps.StatusCode != http.StatusOK {
-		return res, genResponseError(reps)
+	defer func() {
+		closeErr := resp.Body.Close()
+		if closeErr != nil {
+			fmt.Printf("response close error: %v", closeErr)
+		}
+	}()
+	if resp.StatusCode != http.StatusOK {
+		return res, genResponseError(resp)
 	}
 
-	r, err := ioutil.ReadAll(reps.Body)
+	r, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return res, err
 	}
@@ -229,7 +235,10 @@ func dial(req *http.Request) (string, error) {
 }
 
 func genResponseError(r *http.Response) error {
-	res, _ := ioutil.ReadAll(r.Body)
+	res, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return err
+	}
 	return errors.Errorf("[%d] %s", r.StatusCode, res)
 }
 

@@ -69,7 +69,10 @@ func decodeKey(text string) (string, error) {
 
 		switch n[0] {
 		case 'x':
-			fmt.Sscanf(string(r.Next(2)), "%02x", &c)
+			_, err := fmt.Sscanf(string(r.Next(2)), "%02x", &c)
+			if err != nil {
+				return "", err
+			}
 			buf = append(buf, c)
 		default:
 			n = append(n, r.Next(2)...)
@@ -91,7 +94,10 @@ func decodeIndexValue(buf []byte) ([]indexValue, error) {
 		if err != nil {
 			break
 		}
-		s, _ := d.ToString()
+		s, err := d.ToString()
+		if err != nil {
+			return nil, err
+		}
 		typeStr := types.KindStr(d.Kind())
 		values = append(values, indexValue{typename: typeStr, valueStr: s})
 		key = remain
@@ -102,8 +108,14 @@ func decodeIndexValue(buf []byte) ([]indexValue, error) {
 func decodeTableIndex(buf []byte) (int64, int64, []indexValue, error) {
 	if len(buf) >= 19 && buf[0] == 't' && buf[9] == '_' && buf[10] == 'i' {
 		tableid, rowid, indexValue := buf[1:9], buf[11:19], buf[19:]
-		_, tableID, _ := codec.DecodeInt(tableid)
-		_, rowID, _ := codec.DecodeInt(rowid)
+		_, tableID, err := codec.DecodeInt(tableid)
+		if err != nil {
+			return 0, 0, nil, err
+		}
+		_, rowID, err := codec.DecodeInt(rowid)
+		if err != nil {
+			return 0, 0, nil, err
+		}
 		values, err := decodeIndexValue(indexValue)
 		if err != nil {
 			return 0, 0, nil, err
@@ -112,15 +124,21 @@ func decodeTableIndex(buf []byte) (int64, int64, []indexValue, error) {
 	} else if len(buf) >= 22 && buf[0] == 't' && buf[10] == '_' && buf[11] == 'i' {
 		tmp := make([]byte, 0)
 		for i, val := range buf {
-			if (i + 1) % 9 != 0 {
+			if (i+1)%9 != 0 {
 				tmp = append(tmp, val)
 			}
 		}
-		pad := int(255 - buf[len(buf) - 1])
+		pad := int(255 - buf[len(buf)-1])
 		tmp = tmp[:len(tmp)-pad]
 		tableid, rowid, indexValue := tmp[1:9], tmp[11:19], tmp[19:]
-		_, tableID, _ := codec.DecodeInt(tableid)
-		_, rowID, _ := codec.DecodeInt(rowid)
+		_, tableID, err := codec.DecodeInt(tableid)
+		if err != nil {
+			return 0, 0, nil, err
+		}
+		_, rowID, err := codec.DecodeInt(rowid)
+		if err != nil {
+			return 0, 0, nil, err
+		}
 		values, err := decodeIndexValue(indexValue)
 		if err != nil {
 			return 0, 0, nil, err
@@ -133,8 +151,14 @@ func decodeTableIndex(buf []byte) (int64, int64, []indexValue, error) {
 func decodeTableRow(buf []byte) (int64, int64, error) {
 	if len(buf) >= 19 && buf[0] == 't' && buf[9] == '_' && buf[10] == 'r' {
 		tableid, rowid := buf[1:9], buf[11:19]
-		_, tableID, _ := codec.DecodeInt(tableid)
-		_, rowID, _ := codec.DecodeInt(rowid)
+		_, tableID, err := codec.DecodeInt(tableid)
+		if err != nil {
+			return 0, 0, err
+		}
+		_, rowID, err := codec.DecodeInt(rowid)
+		if err != nil {
+			return 0, 0, err
+		}
 		return tableID, rowID, nil
 	} else if len(buf) >= 22 && buf[0] == 't' && buf[10] == '_' && buf[11] == 'r' {
 		tmp := buf[:22]
@@ -149,8 +173,14 @@ func decodeTableRow(buf []byte) (int64, int64, error) {
 				rowid = append(rowid, val)
 			}
 		}
-		_, tableID, _ := codec.DecodeInt(tableid)
-		_, rowID, _ := codec.DecodeInt(rowid)
+		_, tableID, err := codec.DecodeInt(tableid)
+		if err != nil {
+			return 0, 0, err
+		}
+		_, rowID, err := codec.DecodeInt(rowid)
+		if err != nil {
+			return 0, 0, err
+		}
 		return tableID, rowID, nil
 	}
 	return 0, 0, errors.Errorf("illegal code format")
@@ -161,7 +191,10 @@ func decodeKeyFunc(c *cobra.Command, args []string) error {
 		return fmt.Errorf("too many arguments")
 	}
 	keyValue := args[0]
-	raw, _ := decodeKey(keyValue)
+	raw, err := decodeKey(keyValue)
+	if err != nil {
+		return err
+	}
 	// Try to decode using table_row format.
 	tableID, rowID, err := decodeTableRow([]byte(raw))
 	if err == nil {
