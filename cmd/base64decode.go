@@ -26,10 +26,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pingcap/errors"
 	"github.com/pingcap/tidb/model"
 	"github.com/pingcap/tidb/tablecodec"
 	"github.com/pingcap/tidb/types"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
