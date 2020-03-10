@@ -24,7 +24,7 @@ check:
 	@ $(GO) vet -all $(PACKAGES) 2>&1 | awk '{print} END{if(NR>0) {exit 1}}'
 
 	@echo "golint"
-	@ $(GO) get golang.org/x/lint
+	@ $(GO) get golang.org/x/lint/golint
 	@ golint -set_exit_status $(PACKAGES)
 
 	@echo "errcheck"
