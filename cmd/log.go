@@ -72,7 +72,11 @@ func prettyLogFunc(_ *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	defer output.Close()
+	defer func() {
+		if closeErr := output.Close(); closeErr != nil {
+			fmt.Printf("file close error: %v", closeErr)
+		}
+	}()
 
 	for _, path := range args {
 		input, err := os.OpenFile(path, os.O_RDONLY, os.ModePerm)

@@ -57,7 +57,7 @@ func (s *decoderTestSuite) TestTableIndexDecode(c *C) {
 		"table_id: 173\n"+
 		"index_id: 1\n"+
 		"index_value[0]: {type: bigint, value: 6656380}\n"+
-		"index_value[1]: {type: bigint, value: 3720980}\n" +
+		"index_value[1]: {type: bigint, value: 3720980}\n"+
 		"index_value[2]: {type: bigint, value: 20190616}\n")
 }
 

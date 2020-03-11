@@ -9,8 +9,7 @@ GO       := GO111MODULE=on go
 GOBUILD  := CGO_ENABLED=0 $(GO) build
 
 PACKAGES  := $$(go list ./...)
-FILES     := $$(find . -name "*.go" | grep -vE "vendor")
-TOPDIRS   := $$(ls -d */ | grep -vE "vendor")
+FILES     := $$(find . -name "*.go")
 
 .PHONY: default test check doc
 
@@ -22,19 +21,18 @@ check:
 	@ gofmt -s -l -w $(FILES) 2>&1 | awk '{print} END{if(NR>0) {exit 1}}'
 
 	@echo "vet"
-	@ go tool vet -all -shadow *.go 2>&1 | awk '{print} END{if(NR>0) {exit 1}}'
-	@ go tool vet -all -shadow $(TOPDIRS) 2>&1 | awk '{print} END{if(NR>0) {exit 1}}'
+	@ $(GO) vet -all $(PACKAGES) 2>&1 | awk '{print} END{if(NR>0) {exit 1}}'
 
 	@echo "golint"
-	GO111MODULE=off go get github.com/golang/lint/golint
-	@ golint -set_exit_status $(PACKAGES)
+	@ $(GO) build golang.org/x/lint/golint
+	@ ./golint -set_exit_status $(PACKAGES)
 
 	@echo "errcheck"
-	GO111MODULE=off go get github.com/kisielk/errcheck
-	@ errcheck -blank $(PACKAGES) | grep -v "_test\.go" | awk '{print} END{if(NR>0) {exit 1}}'
+	@ $(GO) build github.com/kisielk/errcheck
+	@ ./errcheck -blank $(PACKAGES) | grep -v "_test\.go" | awk '{print} END{if(NR>0) {exit 1}}'
 
 test: check
-	@ log_level=debug $(GO) test -p 3 -cover $(PACKAGES)
+	@ log_level=fatal $(GO) test $(PACKAGES)
 
 doc:
 	@mkdir -p doc
