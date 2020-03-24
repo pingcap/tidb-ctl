@@ -70,7 +70,7 @@ func genDocument(c *cobra.Command, args []string) error {
 		Short: rootShort,
 		Long:  rootLong,
 	}
-	docCmd.AddCommand(mvccRootCmd, schemaRootCmd, regionRootCmd, tableRootCmd, decoderCmd, newBase64decodeCmd, newEtcdCommand())
+	docCmd.AddCommand(mvccRootCmd, schemaRootCmd, regionRootCmd, tableRootCmd, decoderCmd, newBase64decodeCmd, newEtcdCommand(), keyRangeCmd)
 	fmt.Println("Generating documents...")
 	if err := doc.GenMarkdownTree(docCmd, docDir); err != nil {
 		return err
@@ -88,22 +88,28 @@ func Execute() {
 	}
 }
 
-func httpPrint(path string) error {
+func httpGet(path string) (body []byte, status int, err error) {
 	url := schema + "://" + host.String() + ":" + strconv.Itoa(int(port)) + "/" + path
 	resp, err := ctlClient.Get(url)
 	if err != nil {
-		return err
+		return
 	}
+	status = resp.StatusCode
 	defer func() {
 		if errClose := resp.Body.Close(); errClose != nil && err == nil {
 			err = errClose
 		}
 	}()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err = ioutil.ReadAll(resp.Body)
+	return
+}
+
+func httpPrint(path string) error {
+	body, status, err := httpGet(path)
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode != http.StatusOK {
+	if status != http.StatusOK {
 		// Print response body directly if status is not ok.
 		fmt.Println(string(body))
 		return nil
@@ -113,7 +119,7 @@ func httpPrint(path string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(string(prettyJSON.Bytes()))
+	fmt.Println(prettyJSON.String())
 	return nil
 }
 
@@ -129,7 +135,7 @@ const (
 )
 
 func init() {
-	rootCmd.AddCommand(mvccRootCmd, schemaRootCmd, regionRootCmd, tableRootCmd, newBase64decodeCmd, decoderCmd, logCmd, newEtcdCommand())
+	rootCmd.AddCommand(mvccRootCmd, schemaRootCmd, regionRootCmd, tableRootCmd, newBase64decodeCmd, decoderCmd, logCmd, newEtcdCommand(), keyRangeCmd)
 
 	rootCmd.PersistentFlags().IPVarP(&host, hostFlagName, "", net.ParseIP("127.0.0.1"), "TiDB server host")
 	rootCmd.PersistentFlags().Uint16VarP(&port, portFlagName, "", 10080, "TiDB server port")
