@@ -18,3 +18,7 @@ See usage documents [tidb-ctl](doc/tidb-ctl.md).
 * `make` to build `tidb-ctl`.
 * `make doc` to update the documents.
 * `make test` to test the whole package.
+
+### License
+
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fpingcap%2Ftidb-ctl.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fpingcap%2Ftidb-ctl?ref=badge_large)
