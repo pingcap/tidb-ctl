@@ -61,7 +61,7 @@ func (s *decoderTestSuite) TestTableIndexDecode(c *C) {
 		"index_value[2]: {type: bigint, value: 20190616}\n")
 }
 
-func (s *decoderTestSuite) TestIndexValueDecode(c *C) {
+func (s *decoderTestSuite) TestBase64Decode(c *C) {
 	cmd := initCommand()
 	args := []string{"decoder", "CAQCBmFiYw=="}
 	_, output, err := executeCommandC(cmd, args...)
@@ -69,4 +69,10 @@ func (s *decoderTestSuite) TestIndexValueDecode(c *C) {
 	c.Check(string(output), Equals, "format: index_value\n"+
 		"index_value[0]: {type: bigint, value: 2}\n"+
 		"index_value[1]: {type: bytes, value: abc}\n")
+	args = []string{"decoder", "dIAAAAAAAABAX3KAAAAAAAAAAQ=="}
+	_, output, err = executeCommandC(cmd, args...)
+	c.Assert(err, IsNil)
+	c.Check(string(output), Equals, "format: table_row\n"+
+		"table_id: 64\n"+
+		"row_id: 1\n")
 }
