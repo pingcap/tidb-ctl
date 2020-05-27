@@ -210,11 +210,25 @@ func decodeKeyFunc(c *cobra.Command, args []string) error {
 		}
 		return nil
 	}
-	// Try to decode using index_value format.
+	// Try to decode base64 format key.
 	b64decode, err := base64.StdEncoding.DecodeString(keyValue)
 	if err != nil {
 		return err
 	}
+	tableID, rowID, err = decodeTableRow(b64decode)
+	if err == nil {
+		c.Printf("format: table_row\ntable_id: %v\nrow_id: %v\n", tableID, rowID)
+		return nil
+	}
+	tableID, rowID, indexvalues, err = decodeTableIndex(b64decode)
+	if err == nil {
+		c.Printf("format: table_index\ntable_id: %v\nindex_id: %v\n", tableID, rowID)
+		for i, iv := range indexvalues {
+			c.Printf("index_value[%v]: {type: %v, value: %v}\n", i, iv.typename, iv.valueStr)
+		}
+		return nil
+	}
+	// Try to decode base64 format index_value.
 	indexvalues, err = decodeIndexValue(b64decode)
 	if err != nil {
 		return err
