@@ -23,7 +23,7 @@ import (
 const (
 	schemaRoot       = "schema"
 	schemaRootPrefix = schemaRoot + "/"
-	tableIDPrefix    = schemaRootPrefix + "?table_id="
+	tableIDPrefix    = schemaRoot + "?table_id="
 )
 
 // schema command flags
