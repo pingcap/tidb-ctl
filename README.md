@@ -18,3 +18,5 @@ See usage documents [tidb-ctl](doc/tidb-ctl.md).
 * `make` to build `tidb-ctl`.
 * `make doc` to update the documents.
 * `make test` to test the whole package.
+
+<!-- test -->
